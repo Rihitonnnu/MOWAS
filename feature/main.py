@@ -1,0 +1,3 @@
+import conversation
+
+conversation.Conversation()
