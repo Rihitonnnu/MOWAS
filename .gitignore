@@ -1,3 +1,4 @@
 .env
 .venv
 Log.txt
+feature/__pycache__/
