@@ -46,9 +46,6 @@ class Conversation:
         while True:
             # ここで音声で入力を行う→漢字変換しないほうがよき？
             user_input = speechRecognition()
-            # まず時間測定を行う
-            # その後に録音を行う
-            # 関与するのはsurveilance,recognitiongoogle,acquisition
             print(user_input)
             self.conversation_history += f"{user_input}"
             response = self.conversation(self.conversation_history)
