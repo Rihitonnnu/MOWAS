@@ -2,11 +2,21 @@ import os
 import logging
 from dotenv import load_dotenv
 import openai
+
 import SyntheticVoice
 import speechRecognition
+import logging
 
-logging.basicConfig(filename='../log/conversation.log',
-                    filemode='w', level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+logger.setLevel(10)
+sh = logging.StreamHandler()
+logger.addHandler(sh)
+fh = logging.FileHandler('../log/conversation.log', encoding='utf-8')
+logger.addHandler(fh)
+formatter = logging.Formatter('%(asctime)s %(message)s')
+fh.setFormatter(formatter)
+sh.setFormatter(formatter)
+
 load_dotenv()
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
@@ -24,6 +34,8 @@ class Conversation:
                 },
             ],
         )
+        logger.info(
+            response.choices[0]["message"]["content"].strip())
         syntheticVoice.speaking(
             response.choices[0]["message"]["content"].strip())
         # print(response.choices[0]["message"]["content"].strip())
@@ -36,7 +48,8 @@ class Conversation:
             ],
             max_tokens=50,
         )
-        logging.debug(response.choices[0]["message"]["content"].strip())
+        logger.info(
+            response.choices[0]["message"]["content"].strip())
         return response.choices[0]["message"]["content"].strip()
 
     # 名前を聞くような命令を加える→命令が実行され、得られたtxtから名前のみをDBに保存する
@@ -45,6 +58,7 @@ class Conversation:
     def continue_conversation(self):
         while True:
             # ここで音声で入力を行う→漢字変換しないほうがよき？
+            print(speechRecognition)
             user_input = speechRecognition()
             print(user_input)
             self.conversation_history += f"{user_input}"

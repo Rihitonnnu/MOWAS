@@ -10,13 +10,17 @@ import time
 import os
 
 import speechRecognitionGoogle
-import log
+import logging
 
-# 1回音がなってから音が無になる時間が長時間続いた場合に録音を終了する
-
-# ログの設定
-logger = log.Log('../log/soundSurveillance.log').setup()
-
+logger = logging.getLogger(__name__)
+logger.setLevel(10)
+sh = logging.StreamHandler()
+logger.addHandler(sh)
+fh = logging.FileHandler('../log/reactionTime.log', encoding='utf-8')
+logger.addHandler(fh)
+formatter = logging.Formatter('%(asctime)s %(message)s')
+fh.setFormatter(formatter)
+sh.setFormatter(formatter)
 
 # 開始と終了時間
 start = any
@@ -80,7 +84,7 @@ class SpeechRecognition:
     # 音検知を終えて録音したデータの処理を行う
     def finish_sound_detect(self):
 
-        logger.debug('Reaction time is {}'.format(end-start))
+        logger.info('Reaction time is {}'.format(end-start))
         beep.low()
         sd.wait()
         # ノーマライズ。量子化ビット16bitで録音するので int16 の範囲で最大化する
