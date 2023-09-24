@@ -10,13 +10,12 @@ import time
 import os
 
 import speechRecognitionGoogle
+import log
 
 # 1回音がなってから音が無になる時間が長時間続いた場合に録音を終了する
 
 # ログの設定
-logging.basicConfig(filename='../log/soundSurveillance.log', encoding='utf-8',
-                    format='%(asctime)s %(message)s', level=logging.DEBUG,)
-logger = logging.getLogger(__name__)
+logger = log.Log('../log/soundSurveillance.log').setup()
 
 
 # 開始と終了時間
