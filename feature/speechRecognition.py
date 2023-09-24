@@ -34,7 +34,7 @@ except FileExistsError:
 # 保存するファイル名
 FILE_NAME = '../sound/{}/{}.wav'.format(datetime.datetime.now().strftime('%Y%m%d'),
                                         datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
-wave_length = 10  # 録音する長さ（秒）
+wave_length = 5  # 録音する長さ（秒）
 sample_rate = 16_000  # サンプリング周波数
 
 # 音声データ
