@@ -53,13 +53,9 @@ class Conversation:
         logger.info(response.choices[0]["message"]["content"].strip())
         return response.choices[0]["message"]["content"].strip()
 
-    # 名前を聞くような命令を加える→命令が実行され、得られたtxtから名前のみをDBに保存する
-    # ques DBからプロンプトに活かしていけばよいか
-
     def continue_conversation(self):
         while True:
             try:
-                # ここで音声で入力を行う→漢字変換しないほうがよき？
                 user_input = rec_unlimited.recording_to_text()
                 self.conversation_history += f"{user_input}"
 
@@ -71,7 +67,6 @@ class Conversation:
                 exit(1)
 
 
-# メソッド実行
 syntheticVoice = SyntheticVoice.SyntheticVoice()
 Conversation = Conversation(syntheticVoice)
 Conversation.continue_conversation()

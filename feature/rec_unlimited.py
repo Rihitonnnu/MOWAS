@@ -127,7 +127,6 @@ def recording_to_text():
         print('\nRecording finished: ' + repr(args.filename))
         text = speechRecognitionGoogle.speech_recognition(args.filename)
         return text
-        # ここが原因説
         parser.exit(0)
     except Exception as e:
         parser.exit(type(e).__name__ + ': ' + str(e))
