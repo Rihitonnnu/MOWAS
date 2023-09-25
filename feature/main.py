@@ -1,6 +1,4 @@
-import conversation
 import os
-
 try:
     os.mkdir('../sound')
 except FileExistsError:
@@ -11,4 +9,5 @@ try:
 except FileExistsError:
     pass
 
+import conversation
 conversation.Conversation()
