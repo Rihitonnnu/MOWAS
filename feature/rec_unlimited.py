@@ -95,35 +95,40 @@ def callback(indata, frames, time, status):
         end = pf_time.perf_counter()
 
 
-try:
-    if args.samplerate is None:
-        device_info = sd.query_devices(args.device, 'input')
-        # soundfile expects an int, sounddevice provides a float:
-        args.samplerate = int(device_info['default_samplerate'])
-    if args.filename is None:
-        args.filename = tempfile.mktemp(prefix=datetime.datetime.now().strftime('%Y%m%d_%H%M%S'),
-                                        suffix='.wav', dir='../sound/{}'.format(datetime.datetime.now().strftime('%Y%m%d')))
+def recording_to_text():
+    try:
+        if args.samplerate is None:
+            device_info = sd.query_devices(args.device, 'input')
+            # soundfile expects an int, sounddevice provides a float:
+            args.samplerate = int(device_info['default_samplerate'])
+        if args.filename is None:
+            args.filename = tempfile.mktemp(prefix=datetime.datetime.now().strftime('%Y%m%d_%H%M%S'),
+                                            suffix='.wav', dir='../sound/{}'.format(datetime.datetime.now().strftime('%Y%m%d')))
 
-    beep.high()
-    start = pf_time.perf_counter()
-    # Make sure the file is opened before recording anything:
-    with sf.SoundFile(args.filename, mode='x', samplerate=args.samplerate,
-                      channels=args.channels, subtype=args.subtype) as file:
-        with sd.InputStream(samplerate=args.samplerate, device=args.device,
-                            channels=args.channels, callback=callback):
-            print('#' * 80)
-            print('press Ctrl+C to stop the recording')
-            print('#' * 80)
-            while True:
-                file.write(q.get())
-                if pf_time.perf_counter()-start > 30:
-                    raise Exception
-except KeyboardInterrupt:
-    beep.low()
-    logger.info('Reaction time is {}'.format(end-start))
-    print('\nRecording finished: ' + repr(args.filename))
-    speechRecognitionGoogle.speech_recognition(args.filename)
-    parser.exit(0)
-except Exception as e:
-    print('音声が一定時間内に確認されませんでした')
-    parser.exit(type(e).__name__ + ': ' + str(e))
+        beep.high()
+        global start
+        start = pf_time.perf_counter()
+        # Make sure the file is opened before recording anything:
+        with sf.SoundFile(args.filename, mode='x', samplerate=args.samplerate,
+                          channels=args.channels, subtype=args.subtype) as file:
+            with sd.InputStream(samplerate=args.samplerate, device=args.device,
+                                channels=args.channels, callback=callback):
+                print('#' * 80)
+                print('press Ctrl+C to stop the recording')
+                print('#' * 80)
+                while True:
+                    file.write(q.get())
+                    if pf_time.perf_counter()-start > 30:
+                        raise Exception
+    except KeyboardInterrupt:
+        beep.low()
+        print(end)
+        print(start)
+        logger.info('Reaction time is {}'.format(end-start))
+        print('\nRecording finished: ' + repr(args.filename))
+        text = speechRecognitionGoogle.speech_recognition(args.filename)
+        return text
+        # parser.exit(0)
+    except Exception as e:
+        print('音声が一定時間内に確認されませんでした')
+        parser.exit(type(e).__name__ + ': ' + str(e))
