@@ -31,7 +31,6 @@ formatter = logging.Formatter('%(asctime)s %(message)s')
 fh.setFormatter(formatter)
 sh.setFormatter(formatter)
 
-# 開始と終了時間
 start = any
 end = any
 
@@ -124,11 +123,10 @@ def recording_to_text():
         beep.low()
         print(end)
         print(start)
-        logger.info('Reaction time is {}'.format(end-start))
+        # logger.info('Reaction time is {}'.format(end-start))
         print('\nRecording finished: ' + repr(args.filename))
         text = speechRecognitionGoogle.speech_recognition(args.filename)
         return text
         # parser.exit(0)
     except Exception as e:
-        print('音声が一定時間内に確認されませんでした')
         parser.exit(type(e).__name__ + ': ' + str(e))

@@ -4,8 +4,9 @@ from dotenv import load_dotenv
 import openai
 
 import SyntheticVoice
-import speechRecognition
 import logging
+
+import rec_unlimited
 
 logger = logging.getLogger(__name__)
 logger.setLevel(10)
@@ -35,6 +36,7 @@ class Conversation:
             ],
         )
         logger.info(response)
+        logger.info(response.choices[0]["message"]["content"].strip())
         syntheticVoice.speaking(
             response.choices[0]["message"]["content"].strip())
         # print(response.choices[0]["message"]["content"].strip())
@@ -48,6 +50,7 @@ class Conversation:
             max_tokens=70,
         )
         logger.info(response)
+        logger.info(response.choices[0]["message"]["content"].strip())
         return response.choices[0]["message"]["content"].strip()
 
     # 名前を聞くような命令を加える→命令が実行され、得られたtxtから名前のみをDBに保存する
@@ -56,7 +59,8 @@ class Conversation:
     def continue_conversation(self):
         while True:
             # ここで音声で入力を行う→漢字変換しないほうがよき？
-            user_input = speechRecognition.SpeechRecognition()
+            user_input = rec_unlimited.recording_to_text()
+            # user_input = speechRecognition.SpeechRecognition()
             self.conversation_history += f"{user_input}"
             response = self.conversation(self.conversation_history)
             syntheticVoice.speaking(response)
