@@ -58,14 +58,17 @@ class Conversation:
 
     def continue_conversation(self):
         while True:
-            # ここで音声で入力を行う→漢字変換しないほうがよき？
-            user_input = rec_unlimited.recording_to_text()
-            # user_input = speechRecognition.SpeechRecognition()
-            self.conversation_history += f"{user_input}"
-            response = self.conversation(self.conversation_history)
-            syntheticVoice.speaking(response)
-            print(f"{response}")
-            self.conversation_history += f"{response}"
+            try:
+                # ここで音声で入力を行う→漢字変換しないほうがよき？
+                user_input = rec_unlimited.recording_to_text()
+                self.conversation_history += f"{user_input}"
+
+                response = self.conversation(self.conversation_history)
+                syntheticVoice.speaking(response)
+                print(f"{response}")
+                self.conversation_history += f"{response}"
+            except KeyboardInterrupt:
+                exit(1)
 
 
 # メソッド実行

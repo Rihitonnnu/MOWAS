@@ -100,9 +100,9 @@ def recording_to_text():
             device_info = sd.query_devices(args.device, 'input')
             # soundfile expects an int, sounddevice provides a float:
             args.samplerate = int(device_info['default_samplerate'])
-        if args.filename is None:
-            args.filename = tempfile.mktemp(prefix=datetime.datetime.now().strftime('%Y%m%d_%H%M%S'),
-                                            suffix='.wav', dir='../sound/{}'.format(datetime.datetime.now().strftime('%Y%m%d')))
+        # if args.filename is None:
+        args.filename = tempfile.mktemp(prefix=datetime.datetime.now().strftime('%Y%m%d_%H%M%S'),
+                                        suffix='.wav', dir='../sound/{}'.format(datetime.datetime.now().strftime('%Y%m%d')))
 
         beep.high()
         global start
@@ -127,6 +127,7 @@ def recording_to_text():
         print('\nRecording finished: ' + repr(args.filename))
         text = speechRecognitionGoogle.speech_recognition(args.filename)
         return text
-        # parser.exit(0)
+        # ここが原因説
+        parser.exit(0)
     except Exception as e:
         parser.exit(type(e).__name__ + ': ' + str(e))
