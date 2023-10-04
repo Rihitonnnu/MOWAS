@@ -16,6 +16,7 @@ from langchain.schema import (
     HumanMessage,
     SystemMessage,
 )
+import mysql.connector
 
 logger = logging.getLogger(__name__)
 logger.setLevel(10)
@@ -30,6 +31,21 @@ sh.setFormatter(formatter)
 load_dotenv()
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
+
+cnx = None
+
+try:
+    cnx = mysql.connector.connect(
+        user='user',  # ユーザー名
+        password='password',  # パスワード
+        host='localhost'  # ホスト名(IPアドレス）
+    )
+
+    if cnx.is_connected:
+        print("Connected!")
+
+except Exception as e:
+    print(f"Error Occurred: {e}")
 
 
 template = """あなたはドライバーの覚醒を維持するシステムであり、名前はもわすです。自分の名前を呼ぶときはもわすと呼んでください。
@@ -60,6 +76,7 @@ human_input = input("You: ")
 while True:
     try:
         response = llm_chain.predict(human_input=human_input)
+        logger.info(response)
         print(response)
         human_input = input("You: ")
         if human_input == "exit":
