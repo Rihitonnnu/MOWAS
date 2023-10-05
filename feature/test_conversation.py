@@ -32,6 +32,8 @@ load_dotenv()
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
+syntheticVoice = SyntheticVoice.SyntheticVoice()
+
 
 template = """あなたはドライバーの覚醒を維持するシステムであり、名前はもわすです。自分の名前を呼ぶときはもわすと呼んでください。
 まずユーザーに名前を聞いて下さい。
@@ -54,7 +56,7 @@ llm_chain = LLMChain(
 )
 
 response = llm_chain.predict(human_input='こんにちは。あなたの名前はなんですか？')
-# SyntheticVoice.speaking(response)
+syntheticVoice.speaking(response[5:])
 print(response[5:])
 
 human_input = input("You: ")
@@ -63,6 +65,7 @@ while True:
     try:
         response = llm_chain.predict(human_input=human_input)
         logger.info(response)
+        syntheticVoice.speaking(response[9:])
         print(response[9:])
         human_input = input("You: ")
         if human_input == "exit":
