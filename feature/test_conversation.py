@@ -16,7 +16,8 @@ from langchain.schema import (
     HumanMessage,
     SystemMessage,
 )
-import SyntheticVoice
+from SyntheticVoice import SyntheticVoice
+from sql import Sql
 
 logger = logging.getLogger(__name__)
 logger.setLevel(10)
@@ -32,14 +33,23 @@ load_dotenv()
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
-syntheticVoice = SyntheticVoice.SyntheticVoice()
+syntheticVoice = SyntheticVoice()
 
+user_name = Sql().select_name()
 
-template = """あなたはドライバーの覚醒を維持するシステムであり、名前はもわすです。自分の名前を呼ぶときはもわすと呼んでください。
-まずユーザーに名前を聞いて下さい。
-{chat_history}
-Human: {human_input}
-"""
+if user_name != None:
+    template = """あなたはドライバーの覚醒を維持するシステムであり、名前はもわすです。自分の名前を呼ぶときはもわすと呼んでください。
+    ユーザーの入力から得られた名前を定期的に呼びかけながら会話を行ってください。
+    {chat_history}
+    Human: {human_input}
+    """
+
+if user_name == None:
+    template = """あなたはドライバーの覚醒を維持するシステムであり、名前はもわすです。自分の名前を呼ぶときはもわすと呼んでください。
+    まずユーザーに名前を聞いて下さい。
+    {chat_history}
+    Human: {human_input}
+    """
 
 human_template = "{text}"
 
@@ -55,7 +65,8 @@ llm_chain = LLMChain(
     memory=memory
 )
 
-response = llm_chain.predict(human_input='こんにちは。あなたの名前はなんですか？')
+response = llm_chain.predict(
+    human_input="こんにちは。あなたの名前はなんですか？私の名前は{}です".format(user_name))
 syntheticVoice.speaking(response[5:])
 print(response[5:])
 
