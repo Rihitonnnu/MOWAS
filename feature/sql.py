@@ -30,16 +30,17 @@ class Sql:
                     '''
             cursor.execute(query)
             rows = cursor.fetchall()
+
+            if rows == []:
+                raise Exception
             for row in rows:
-                print(row)
+                return row[0]
         except:
-            pass
+            print('データが取得できませんでした')
+            return None
         finally:
             # クローズ
             if cursor is not None:
                 cursor.close()
             if self.cnx is not None and self.cnx.is_connected():
                 self.cnx.close()
-
-
-Sql().select_name()
