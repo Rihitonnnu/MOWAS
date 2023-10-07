@@ -19,7 +19,7 @@ class Sql:
             )
 
             if self.cnx.is_connected:
-                print("Connected!")
+                print("Database connected.")
 
         except Exception as e:
             print(f"Error Occurred: {e}")
@@ -38,9 +38,10 @@ class Sql:
             if rows == []:
                 raise Exception
             for row in rows:
+                print("Data successfully retrieved.")
                 return row[0]
         except:
-            print('データが取得できませんでした')
+            print('Data could not be successfully retrieved.')
             return None
         finally:
             # クローズ
