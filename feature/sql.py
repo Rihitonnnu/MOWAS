@@ -1,4 +1,8 @@
 import mysql.connector
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class Sql:
@@ -8,10 +12,10 @@ class Sql:
     def __init__(self):
         try:
             self.cnx = mysql.connector.connect(
-                user='user',  # ユーザー名
-                password='password',  # パスワード
-                host='localhost',  # ホスト名(IPアドレス）
-                database='mowas',
+                user=os.environ['MYSQL_USER'],  # ユーザー名
+                password=os.environ['MYSQL_PASSWORD'],  # パスワード
+                host=os.environ['HOST'],  # ホスト名(IPアドレス）
+                database=os.environ['DATABASE'],
             )
 
             if self.cnx.is_connected:
