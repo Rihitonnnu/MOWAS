@@ -1,0 +1,31 @@
+version: '3.9'
+
+services:
+  mysql:
+    image: mysql:8.1.0
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mowas
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      TZ: Asia/Tokyo
+    volumes:
+      - data-volume:/var/lib/mysql
+    restart: always
+    networks:
+      - mysql-network
+
+  cli:
+    image: mysql:8.1.0
+    networks:
+      - mysql-network
+    command: mysql -hmysql -uuser -ppassword db
+
+networks:
+  mysql-network:
+    driver: bridge
+
+volumes:
+  data-volume:

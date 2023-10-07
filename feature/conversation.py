@@ -39,7 +39,6 @@ class Conversation:
         logger.info(response.choices[0]["message"]["content"].strip())
         syntheticVoice.speaking(
             response.choices[0]["message"]["content"].strip())
-        # print(response.choices[0]["message"]["content"].strip())
 
     def conversation(self, prompt):
         response = openai.ChatCompletion.create(
