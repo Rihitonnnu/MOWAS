@@ -9,5 +9,5 @@ try:
 except FileExistsError:
     pass
 
-import conversation
-conversation.Conversation()
+import test_conversation
+test_conversation
