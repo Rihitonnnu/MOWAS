@@ -18,6 +18,7 @@ from langchain.schema import (
 )
 from SyntheticVoice import SyntheticVoice
 from sql import Sql
+import rec_unlimited
 
 logger = logging.getLogger(__name__)
 logger.setLevel(10)
@@ -40,13 +41,15 @@ user_name = Sql().select_name()
 if user_name != None:
     template = """あなたはドライバーの覚醒を維持するシステムであり、名前はもわすです。自分の名前を呼ぶときはもわすと呼んでください。
     ユーザーの入力から得られた名前を定期的に呼びかけながら会話を行ってください。
+    また現在のユーザーの名前と登録されている名前と異なる名前の場合があります。その場合は名前の登録を行います。
+    名前を登録する場合はコントロールNボタンを押して名前を言ってもらうように案内してください
     {chat_history}
     Human: {human_input}
     """
 
 if user_name == None:
     template = """あなたはドライバーの覚醒を維持するシステムであり、名前はもわすです。自分の名前を呼ぶときはもわすと呼んでください。
-    まずユーザーに名前を聞いて下さい。
+    まず名前の登録を行ってください。名前を登録する場合はコントロールNボタンを押して名前を言ってもらうように案内してください
     {chat_history}
     Human: {human_input}
     """
@@ -65,11 +68,23 @@ llm_chain = LLMChain(
     memory=memory
 )
 
-response = llm_chain.predict(
-    human_input="こんにちは。あなたの名前はなんですか？私の名前は{}です".format(user_name))
+if user_name != None:
+    response = llm_chain.predict(
+        human_input="こんにちは。あなたの名前はなんですか？私の名前は{}です".format(user_name))
+else:
+    response = llm_chain.predict(
+        human_input="こんにちは。あなたの名前はなんですか？名前の登録をしたいです")
 syntheticVoice.speaking(response[5:])
 print(response[5:])
 
+# ここrefactorが必要
+human_input = input("You: ")
+# human_input = rec_unlimited.recording_to_text()
+response = llm_chain.predict(human_input=human_input)
+logger.info(response)
+
+syntheticVoice.speaking(response[7:])
+print(response[7:])
 human_input = input("You: ")
 
 while True:
@@ -83,3 +98,4 @@ while True:
             break
     except KeyboardInterrupt:
         exit(1)
+    # ここに例外処理で名前登録
