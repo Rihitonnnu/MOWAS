@@ -2,6 +2,7 @@
 .venv
 Log.txt
 feature/__pycache__/
+feature/view/__pycache__/
 sound/
 log/
 wip/
