@@ -20,82 +20,83 @@ from SyntheticVoice import SyntheticVoice
 from sql import Sql
 import rec_unlimited
 
-logger = logging.getLogger(__name__)
-logger.setLevel(10)
-sh = logging.StreamHandler()
-logger.addHandler(sh)
-fh = logging.FileHandler('../log/conversation.log', encoding='utf-8')
-logger.addHandler(fh)
-formatter = logging.Formatter('%(asctime)s %(message)s')
-fh.setFormatter(formatter)
-sh.setFormatter(formatter)
 
-load_dotenv()
+def conversation():
+    logger = logging.getLogger(__name__)
+    logger.setLevel(10)
+    sh = logging.StreamHandler()
+    logger.addHandler(sh)
+    fh = logging.FileHandler('../log/conversation.log', encoding='utf-8')
+    logger.addHandler(fh)
+    formatter = logging.Formatter('%(asctime)s %(message)s')
+    fh.setFormatter(formatter)
+    sh.setFormatter(formatter)
 
-openai.api_key = os.environ["OPENAI_API_KEY"]
+    load_dotenv()
 
-syntheticVoice = SyntheticVoice()
+    openai.api_key = os.environ["OPENAI_API_KEY"]
 
-user_name = Sql().select_name()
+    syntheticVoice = SyntheticVoice()
 
-if user_name != None:
-    template = """あなたはドライバーの覚醒を維持するシステムであり、名前はもわすです。自分の名前を呼ぶときはもわすと呼んでください。
-    ユーザーの入力から得られた名前を定期的に呼びかけながら会話を行ってください。
-    また現在のユーザーの名前と登録されている名前と異なる名前の場合があります。その場合は名前の登録を行います。
-    名前を登録する場合はコントロールNボタンを押して名前を言ってもらうように案内してください
-    {chat_history}
-    Human: {human_input}
-    """
+    user_name = Sql().select_name()
 
-if user_name == None:
-    template = """あなたはドライバーの覚醒を維持するシステムであり、名前はもわすです。自分の名前を呼ぶときはもわすと呼んでください。
-    まず名前の登録を行ってください。名前を登録する場合はコントロールNボタンを押して名前を言ってもらうように案内してください
-    {chat_history}
-    Human: {human_input}
-    """
+    if user_name != None:
+        template = """あなたはドライバーの覚醒を維持するシステムであり、名前はもわすです。自分の名前を呼ぶときはもわすと呼んでください。
+        ユーザーの入力から得られた名前を定期的に呼びかけながら会話を行ってください。
+        また操作のオプションは２つあります。名前の更新と会話です。
+        名前の更新は現在のユーザーの名前と登録されている名前と異なる名前の場合に適切な名前の登録を行います。
+        {chat_history}
+        Human: {human_input}
+        """
 
-human_template = "{text}"
+    if user_name == None:
+        template = """あなたはドライバーの覚醒を維持するシステムであり、名前はもわすです。自分の名前を呼ぶときはもわすと呼んでください。
+        まず名前の登録を行ってください。名前を登録する場合はコントロールNボタンを押して名前を言ってもらうように案内してください
+        {chat_history}
+        Human: {human_input}
+        """
 
-prompt = PromptTemplate(
-    input_variables=["chat_history", "human_input"], template=template
-)
-memory = ConversationBufferMemory(memory_key="chat_history")
+    human_template = "{text}"
 
-llm = ChatOpenAI(temperature=0.1)
-llm_chain = LLMChain(
-    llm=llm,
-    prompt=prompt,
-    memory=memory
-)
+    prompt = PromptTemplate(
+        input_variables=["chat_history", "human_input"], template=template
+    )
+    memory = ConversationBufferMemory(memory_key="chat_history")
 
-if user_name != None:
-    response = llm_chain.predict(
-        human_input="こんにちは。あなたの名前はなんですか？私の名前は{}です".format(user_name))
-else:
-    response = llm_chain.predict(
-        human_input="こんにちは。あなたの名前はなんですか？名前の登録をしたいです")
-syntheticVoice.speaking(response[5:])
-print(response[5:])
+    llm = ChatOpenAI(temperature=0.1)
+    llm_chain = LLMChain(
+        llm=llm,
+        prompt=prompt,
+        memory=memory
+    )
 
-# ここrefactorが必要
-human_input = input("You: ")
-# human_input = rec_unlimited.recording_to_text()
-response = llm_chain.predict(human_input=human_input)
-logger.info(response)
+    if user_name != None:
+        response = llm_chain.predict(
+            human_input="こんにちは。あなたの名前はなんですか？私の名前は{}です。".format(user_name))
+    else:
+        response = llm_chain.predict(
+            human_input="こんにちは。あなたの名前はなんですか？名前の登録をしたいです")
+    syntheticVoice.speaking(response[5:])
+    print(response[5:])
 
-syntheticVoice.speaking(response[7:])
-print(response[7:])
-human_input = input("You: ")
+    # ここrefactorが必要
+    human_input = input("You: ")
+    # human_input = rec_unlimited.recording_to_text()
+    response = llm_chain.predict(human_input=human_input)
+    logger.info(response)
 
-while True:
-    try:
-        response = llm_chain.predict(human_input=human_input)
-        logger.info(response)
-        syntheticVoice.speaking(response[9:])
-        print(response[9:])
-        human_input = input("You: ")
-        if human_input == "exit":
-            break
-    except KeyboardInterrupt:
-        exit(1)
-    # ここに例外処理で名前登録
+    syntheticVoice.speaking(response[7:])
+    print(response[7:])
+    human_input = input("You: ")
+
+    while True:
+        try:
+            response = llm_chain.predict(human_input=human_input)
+            logger.info(response)
+            syntheticVoice.speaking(response[9:])
+            print(response[9:])
+            human_input = input("You: ")
+            if human_input == "exit":
+                break
+        except KeyboardInterrupt:
+            exit(1)

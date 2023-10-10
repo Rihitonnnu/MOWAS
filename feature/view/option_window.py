@@ -43,9 +43,9 @@ while True:     # The Event Loop
     if event == "戻る":
         window.close()
         window = make_main_window()
+    if event == "MOWASとの会話を開始する":
+        window.close()
     if event == 'SEND':
         query = values['-QUERY-'].rstrip()
         # EXECUTE YOUR COMMAND HERE
         print('The command you entered was {}'.format(query), flush=True)
-
-window.close()

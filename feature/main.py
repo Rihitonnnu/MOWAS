@@ -1,4 +1,9 @@
+
+import test_conversation
 import os
+import view.option_window
+view.option_window
+
 try:
     os.mkdir('../sound')
 except FileExistsError:
@@ -9,5 +14,4 @@ try:
 except FileExistsError:
     pass
 
-import test_conversation
-test_conversation
+test_conversation.conversation()
