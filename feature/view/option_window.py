@@ -1,8 +1,9 @@
 import PySimpleGUI as sg
+from sql import Sql
 
 sg.theme('GreenTan')  # give our window a spiffy set of colors
 
-user_name = 'りょう'
+user_name = Sql().select_name()
 
 
 def make_main_window():
@@ -17,7 +18,8 @@ def make_main_window():
 
 def make_name_change_window():
     sub_layout = [[sg.Text("変更したい名前を入力してください".format(user_name), size=(60, 1))],
-                  [sg.Input(default_text=user_name, font=('Helvetica 10'))],
+                  [sg.Input(default_text=user_name, font=(
+                      'Helvetica 10'), key='name_input')],
                   [sg.Button('更新', button_color=(
                       sg.YELLOWS[0], sg.BLUES[0]), bind_return_key=True, size=(60, 1))],
                   [sg.Button('戻る', button_color=(
@@ -38,7 +40,9 @@ while True:     # The Event Loop
         window.close()
         window = make_name_change_window()
     if event == "更新":
+        Sql().change_name(values['name_input'])
         window.close()
+        user_name = Sql().select_name()
         window = make_main_window()
     if event == "戻る":
         window.close()
