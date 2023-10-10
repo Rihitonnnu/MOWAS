@@ -53,6 +53,13 @@ class Sql:
     def change_name(self, input):
         cursor = self.cnx.cursor()
         query = f'''
-                    update users set name={input} where id=1;
+                    UPDATE users 
+                    SET name='{input}'
+                    WHERE id=1
                     '''
         cursor.execute(query)
+        self.cnx.commit()
+        if cursor is not None:
+            cursor.close()
+        if self.cnx is not None and self.cnx.is_connected():
+            self.cnx.close()
