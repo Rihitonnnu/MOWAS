@@ -1,5 +1,5 @@
 
-import test_conversation
+import feature.conversation as conversation
 import os
 import view.option_window
 view.option_window
@@ -14,4 +14,4 @@ try:
 except FileExistsError:
     pass
 
-test_conversation.conversation()
+conversation.conversation()
