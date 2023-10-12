@@ -2,70 +2,98 @@ import os
 import logging
 from dotenv import load_dotenv
 import openai
-
-import SyntheticVoice
+from langchain.memory import ConversationBufferMemory
+from langchain.llms import OpenAI
+from langchain.chains import ConversationChain
+from langchain.prompts import ChatPromptTemplate
+from langchain.chains import LLMChain
+from langchain.prompts import PromptTemplate
+from langchain.schema import BaseOutputParser
+from langchain.chat_models import ChatOpenAI
 import logging
-
+from langchain.schema import (
+    AIMessage,
+    HumanMessage,
+    SystemMessage,
+)
+from SyntheticVoice import SyntheticVoice
+from sql import Sql
 import rec_unlimited
 
-logger = logging.getLogger(__name__)
-logger.setLevel(10)
-sh = logging.StreamHandler()
-logger.addHandler(sh)
-fh = logging.FileHandler('../log/conversation.log', encoding='utf-8')
-logger.addHandler(fh)
-formatter = logging.Formatter('%(asctime)s %(message)s')
-fh.setFormatter(formatter)
-sh.setFormatter(formatter)
 
-load_dotenv()
+def conversation():
+    logger = logging.getLogger(__name__)
+    logger.setLevel(10)
+    sh = logging.StreamHandler()
+    logger.addHandler(sh)
+    fh = logging.FileHandler('../log/conversation.log', encoding='utf-8')
+    logger.addHandler(fh)
+    formatter = logging.Formatter('%(asctime)s %(message)s')
+    fh.setFormatter(formatter)
+    sh.setFormatter(formatter)
 
-openai.api_key = os.environ["OPENAI_API_KEY"]
+    load_dotenv()
 
+    openai.api_key = os.environ["OPENAI_API_KEY"]
 
-class Conversation:
-    def __init__(self, syntheticVoice):
-        self.conversation_history = "あなたの名前はもわすです。自分の名前を呼ぶときはもわすと呼んでください。まずユーザーに名前を聞いて下さい。そしてその名前を記憶し、定期的に名前を呼びかけながら会話を続けて下さい。"
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {
-                    "role": "system",
-                    "content": self.conversation_history
-                },
-            ],
-        )
-        logger.info(response)
-        logger.info(response.choices[0]["message"]["content"].strip())
-        syntheticVoice.speaking(
-            response.choices[0]["message"]["content"].strip())
+    syntheticVoice = SyntheticVoice()
 
-    def conversation(self, prompt):
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "user", "content": prompt},
-            ],
-            max_tokens=70,
-        )
-        logger.info(response)
-        logger.info(response.choices[0]["message"]["content"].strip())
-        return response.choices[0]["message"]["content"].strip()
+    user_name = Sql().select_name()
 
-    def continue_conversation(self):
-        while True:
-            try:
-                user_input = rec_unlimited.recording_to_text()
-                self.conversation_history += f"{user_input}"
+    if user_name != None:
+        template = """あなたはドライバーの覚醒を維持するシステムであり、名前はもわすです。自分の名前を呼ぶときはもわすと呼んでください。
+        ユーザーの入力から得られた名前を定期的に呼びかけながら会話を行ってください。
+        また操作のオプションは２つあります。名前の更新と会話です。
+        名前の更新は現在のユーザーの名前と登録されている名前と異なる名前の場合に適切な名前の登録を行います。
+        {chat_history}
+        Human: {human_input}
+        """
 
-                response = self.conversation(self.conversation_history)
-                syntheticVoice.speaking(response)
-                print(f"{response}")
-                self.conversation_history += f"{response}"
-            except KeyboardInterrupt:
-                exit(1)
+    if user_name == None:
+        template = """あなたはドライバーの覚醒を維持するシステムであり、名前はもわすです。自分の名前を呼ぶときはもわすと呼んでください。
+        まず名前の登録を行ってください。名前を登録する場合はコントロールNボタンを押して名前を言ってもらうように案内してください
+        {chat_history}
+        Human: {human_input}
+        """
 
+    human_template = "{text}"
 
-syntheticVoice = SyntheticVoice.SyntheticVoice()
-Conversation = Conversation(syntheticVoice)
-Conversation.continue_conversation()
+    prompt = PromptTemplate(
+        input_variables=["chat_history", "human_input"], template=template
+    )
+    memory = ConversationBufferMemory(memory_key="chat_history")
+
+    llm = ChatOpenAI(temperature=0.1)
+    llm_chain = LLMChain(
+        llm=llm,
+        prompt=prompt,
+        memory=memory
+    )
+
+    if user_name != None:
+        response = llm_chain.predict(
+            human_input="こんにちは。あなたの名前はなんですか？私の名前は{}です。".format(user_name))
+    else:
+        response = llm_chain.predict(
+            human_input="こんにちは。あなたの名前はなんですか？名前の登録をしたいです")
+    syntheticVoice.speaking(response[5:])
+    print(response[5:])
+
+    # ここrefactorが必要
+    human_input = rec_unlimited.recording_to_text()
+    response = llm_chain.predict(human_input=human_input)
+    logger.info(response)
+
+    syntheticVoice.speaking(response[7:])
+    print(response[7:])
+    human_input = rec_unlimited.recording_to_text()
+
+    while True:
+        try:
+            response = llm_chain.predict(human_input=human_input)
+            logger.info(response)
+            syntheticVoice.speaking(response[9:])
+            print(response[9:])
+            human_input = rec_unlimited.recording_to_text()
+        except KeyboardInterrupt:
+            exit(1)
