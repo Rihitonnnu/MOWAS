@@ -26,9 +26,10 @@ def conversation():
     logger.setLevel(10)
     sh = logging.StreamHandler()
     logger.addHandler(sh)
-    fh = logging.FileHandler('../log/conversation.log', encoding='utf-8')
+    fh = logging.FileHandler('../log/conversation.log',
+                             encoding='utf-8', mode='w')
     logger.addHandler(fh)
-    formatter = logging.Formatter('%(asctime)s %(message)s')
+    formatter = logging.Formatter('%(message)s')
     fh.setFormatter(formatter)
     sh.setFormatter(formatter)
 
