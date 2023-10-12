@@ -63,3 +63,6 @@ class Sql:
             cursor.close()
         if self.cnx is not None and self.cnx.is_connected():
             self.cnx.close()
+
+    def store_conversation_summary(summary):
+        pass

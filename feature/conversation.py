@@ -19,6 +19,7 @@ from langchain.schema import (
 from SyntheticVoice import SyntheticVoice
 from sql import Sql
 import rec_unlimited
+from gpt import Gpt
 
 
 def conversation():
@@ -101,4 +102,6 @@ def conversation():
             human_input = input("You: ")
             logger.info(user_name + ": " + human_input)
         except KeyboardInterrupt:
+            Gpt.make_conversation_summary()
+            # ここでsqlで実際に内容を保存する
             exit(1)
