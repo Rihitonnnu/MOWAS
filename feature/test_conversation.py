@@ -80,14 +80,13 @@ def conversation():
     print(response[5:])
 
     # ここrefactorが必要
-    human_input = input("You: ")
-    # human_input = rec_unlimited.recording_to_text()
+    human_input = rec_unlimited.recording_to_text()
     response = llm_chain.predict(human_input=human_input)
     logger.info(response)
 
     syntheticVoice.speaking(response[7:])
     print(response[7:])
-    human_input = input("You: ")
+    human_input = rec_unlimited.recording_to_text()
 
     while True:
         try:
@@ -95,8 +94,6 @@ def conversation():
             logger.info(response)
             syntheticVoice.speaking(response[9:])
             print(response[9:])
-            human_input = input("You: ")
-            if human_input == "exit":
-                break
+            human_input = rec_unlimited.recording_to_text()
         except KeyboardInterrupt:
             exit(1)
