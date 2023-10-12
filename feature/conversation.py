@@ -40,7 +40,14 @@ def conversation():
 
     syntheticVoice = SyntheticVoice()
 
-    user_name = Sql().select_name()
+    user_name = Sql().select('''
+                    SELECT  name 
+                    FROM    users
+                    ''')
+    summary = Sql().select('''
+                    SELECT  summary 
+                    FROM    users
+                    ''')
 
     if user_name != None:
         template = """あなたはドライバーの覚醒を維持するシステムであり、名前はもわすです。自分の名前を呼ぶときはもわすと呼んでください。
@@ -102,6 +109,6 @@ def conversation():
             human_input = input("You: ")
             logger.info(user_name + ": " + human_input)
         except KeyboardInterrupt:
-            Gpt.make_conversation_summary()
-            # ここでsqlで実際に内容を保存する
+            summary = Gpt().make_conversation_summary()
+            Sql().store_conversation_summary(summary)
             exit(1)

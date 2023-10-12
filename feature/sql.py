@@ -24,14 +24,10 @@ class Sql:
         except Exception as e:
             print(f"Error Occurred: {e}")
 
-    def select_name(self):
+    def select(self, query):
         try:
             cursor = self.cnx.cursor()
 
-            query = '''
-                    SELECT  name 
-                    FROM    users
-                    '''
             cursor.execute(query)
             rows = cursor.fetchall()
 
@@ -64,5 +60,16 @@ class Sql:
         if self.cnx is not None and self.cnx.is_connected():
             self.cnx.close()
 
-    def store_conversation_summary(summary):
-        pass
+    def store_conversation_summary(self, summary):
+        cursor = self.cnx.cursor()
+        query = f'''
+                    UPDATE users 
+                    SET summary='{summary}'
+                    WHERE id=1
+                    '''
+        cursor.execute(query)
+        self.cnx.commit()
+        if cursor is not None:
+            cursor.close()
+        if self.cnx is not None and self.cnx.is_connected():
+            self.cnx.close()
