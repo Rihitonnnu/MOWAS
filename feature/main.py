@@ -1,5 +1,5 @@
 
-import feature.conversation as conversation
+import conversation
 import os
 import view.option_window
 view.option_window
