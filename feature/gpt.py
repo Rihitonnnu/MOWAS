@@ -15,7 +15,7 @@ class Gpt:
             conversation_log = f.read()
             prompt = f"""
                     # 命令
-                    以下の会話内容を要約しどのような話題について話していたか教えてください
+                    以下の会話内容を要約し、どのような話題について話していたか教えてください
 
                     {conversation_log}
                     """
@@ -24,4 +24,5 @@ class Gpt:
                 messages=[
                     {'role': 'user', 'content': prompt}],
             )
-            print(response)
+            return response['choices'][0]['message']['content']
+            # print(response['choices'][0]['message']['content'])
