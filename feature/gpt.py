@@ -6,7 +6,7 @@ load_dotenv()
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
 
-class Prompt:
+class Gpt:
     def __init__(self):
         pass
 
@@ -19,7 +19,9 @@ class Prompt:
 
                     {conversation_log}
                     """
-            return prompt
-
-
-Prompt().make_conversation_summary()
+            response = openai.ChatCompletion.create(
+                model='gpt-3.5-turbo',
+                messages=[
+                    {'role': 'user', 'content': prompt}],
+            )
+            print(response)
