@@ -3,7 +3,10 @@ from sql import Sql
 
 sg.theme('GreenTan')  # give our window a spiffy set of colors
 
-user_name = Sql().select_name()
+user_name = Sql().select('''
+                    SELECT  name 
+                    FROM    users
+                    ''')
 
 
 def make_main_window():
