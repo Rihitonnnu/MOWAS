@@ -20,6 +20,7 @@ from SyntheticVoice import SyntheticVoice
 from sql import Sql
 import rec_unlimited
 from gpt import Gpt
+import beep
 
 
 def conversation():
@@ -52,8 +53,10 @@ def conversation():
     if user_name != None:
         template = """あなたはドライバーの覚醒を維持するシステムであり、名前はもわすです。自分の名前を呼ぶときはもわすと呼んでください。
         ユーザーの入力から得られた名前を定期的に呼びかけながら会話を行ってください。
-        また操作のオプションは２つあります。名前の更新と会話です。
         名前の更新は現在のユーザーの名前と登録されている名前と異なる名前の場合に適切な名前の登録を行います。
+        また以下が前回の会話の要約内容です。会話を進める上での参考にしてください。
+        {summary}
+
         {chat_history}
         Human: {human_input}
         """
@@ -68,20 +71,22 @@ def conversation():
     human_template = "{text}"
 
     prompt = PromptTemplate(
-        input_variables=["chat_history", "human_input"], template=template
+        input_variables=["chat_history", "summary", "human_input"], template=template
     )
-    memory = ConversationBufferMemory(memory_key="chat_history")
+    memory = ConversationBufferMemory(
+        memory_key="chat_history", input_key="human_input")
 
     llm = ChatOpenAI(temperature=0.1)
     llm_chain = LLMChain(
         llm=llm,
         prompt=prompt,
-        memory=memory
+        memory=memory,
+        verbose=False
     )
 
     if user_name != None:
         response = llm_chain.predict(
-            human_input="こんにちは。あなたの名前はなんですか？私の名前は{}です。".format(user_name))
+            human_input="こんにちは。あなたの名前はなんですか？私の名前は{}です。".format(user_name), summary=summary)
     else:
         response = llm_chain.predict(
             human_input="こんにちは。あなたの名前はなんですか？名前の登録をしたいです")
@@ -92,7 +97,7 @@ def conversation():
     # human_input = rec_unlimited.recording_to_text()
     human_input = input("You: ")
     logger.info(user_name + ": " + human_input)
-    response = llm_chain.predict(human_input=human_input)
+    response = llm_chain.predict(human_input=human_input, summary=summary)
     logger.info(response[4:])
 
     syntheticVoice.speaking(response[7:])
@@ -102,13 +107,16 @@ def conversation():
 
     while True:
         try:
-            response = llm_chain.predict(human_input=human_input)
+            response = llm_chain.predict(
+                human_input=human_input, summary=summary)
             logger.info(response[4:])
             syntheticVoice.speaking(response[9:])
             # human_input = rec_unlimited.recording_to_text()
             human_input = input("You: ")
             logger.info(user_name + ": " + human_input)
         except KeyboardInterrupt:
+            syntheticVoice.speaking("会話を終了しています。しばらくお待ち下さい")
             summary = Gpt().make_conversation_summary()
             Sql().store_conversation_summary(summary)
+            beep.high()
             exit(1)
