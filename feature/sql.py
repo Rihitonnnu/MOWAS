@@ -69,6 +69,7 @@ class Sql:
                     '''
         cursor.execute(query)
         self.cnx.commit()
+        print('updating summary completed.')
         if cursor is not None:
             cursor.close()
         if self.cnx is not None and self.cnx.is_connected():
