@@ -52,8 +52,7 @@ def conversation():
 
     if user_name != None:
         template = """あなたはドライバーの覚醒を維持するシステムであり、名前はもわすです。自分の名前を呼ぶときはもわすと呼んでください。
-        ユーザーの入力から得られた名前を定期的に呼びかけながら会話を行ってください。
-        名前の更新は現在のユーザーの名前と登録されている名前と異なる名前の場合に適切な名前の登録を行います。
+        名前を定期的に呼びかけながら会話を行ってください。
         また以下が前回の会話の要約内容です。会話を進める上での参考にしてください。
         {summary}
 
@@ -63,7 +62,9 @@ def conversation():
 
     if user_name == None:
         template = """あなたはドライバーの覚醒を維持するシステムであり、名前はもわすです。自分の名前を呼ぶときはもわすと呼んでください。
-        まず名前の登録を行ってください。名前を登録する場合はコントロールNボタンを押して名前を言ってもらうように案内してください
+        また以下が前回の会話の要約内容です。会話を進める上での参考にしてください。
+        {summary}
+        
         {chat_history}
         Human: {human_input}
         """
@@ -100,7 +101,7 @@ def conversation():
     response = llm_chain.predict(human_input=human_input, summary=summary)
     logger.info(response[4:])
 
-    syntheticVoice.speaking(response[7:])
+    syntheticVoice.speaking(response[5:])
     # human_input = rec_unlimited.recording_to_text()
     human_input = input("You: ")
     logger.info(user_name + ": " + human_input)
@@ -110,12 +111,12 @@ def conversation():
             response = llm_chain.predict(
                 human_input=human_input, summary=summary)
             logger.info(response[4:])
-            syntheticVoice.speaking(response[9:])
+            syntheticVoice.speaking(response[7:])
             # human_input = rec_unlimited.recording_to_text()
             human_input = input("You: ")
             logger.info(user_name + ": " + human_input)
         except KeyboardInterrupt:
-            syntheticVoice.speaking("会話を終了しています。しばらくお待ち下さい")
+            syntheticVoice.speaking("会話を終了しています。しばらくお待ち下さい ")
             summary = Gpt().make_conversation_summary()
             Sql().store_conversation_summary(summary)
             beep.high()
