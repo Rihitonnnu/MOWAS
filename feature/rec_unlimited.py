@@ -25,7 +25,8 @@ logger = logging.getLogger(__name__)
 logger.setLevel(10)
 sh = logging.StreamHandler()
 logger.addHandler(sh)
-fh = logging.FileHandler('../log/reactionTime.log', encoding='utf-8')
+fh = logging.FileHandler('../log/reaction/time_{}.log'.format(
+    datetime.datetime.now().strftime('%Y%m%d_%H%M%S')), encoding='utf-8')
 logger.addHandler(fh)
 formatter = logging.Formatter('%(asctime)s %(message)s')
 fh.setFormatter(formatter)
@@ -34,7 +35,7 @@ sh.setFormatter(formatter)
 start = any
 end = any
 
-VOLUME_THRESHOLD = 30
+VOLUME_THRESHOLD = 10
 IS_RECORDING = False
 
 try:
@@ -123,7 +124,7 @@ def recording_to_text():
         beep.low()
         print(end)
         print(start)
-        # logger.info('Reaction time is {}'.format(end-start))
+        logger.info('Reaction time is {}'.format(end-start))
         print('\nRecording finished: ' + repr(args.filename))
         text = speechRecognitionGoogle.speech_recognition(args.filename)
         return text
