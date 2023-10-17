@@ -15,7 +15,7 @@ class SyntheticVoice:
     def speaking(self, text):
         params = (
             ("text", text),
-            ("speaker", 3)  # 音声の種類をInt型で指定
+            ("speaker", 1)  # 音声の種類をInt型で指定
         )
         # 以下の検索結果でどの数値がどういった声なのか記載されている
         # https://github.com/VOICEVOX/voicevox_resource/search?q=styleId
