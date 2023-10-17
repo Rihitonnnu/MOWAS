@@ -95,25 +95,25 @@ def conversation():
     print(response[5:])
 
     # ここrefactorが必要
-    # human_input = rec_unlimited.recording_to_text()
-    human_input = input("You: ")
+    human_input = rec_unlimited.recording_to_text()
+    # human_input = input("You: ")
     logger.info(user_name + ": " + human_input)
     response = llm_chain.predict(human_input=human_input, summary=summary)
-    logger.info(response[4:])
+    logger.info(response)
 
-    syntheticVoice.speaking(response[5:])
-    # human_input = rec_unlimited.recording_to_text()
-    human_input = input("You: ")
+    syntheticVoice.speaking(response[4:])
+    human_input = rec_unlimited.recording_to_text()
+    # human_input = input("You: ")
     logger.info(user_name + ": " + human_input)
 
     while True:
         try:
             response = llm_chain.predict(
                 human_input=human_input, summary=summary)
-            logger.info(response[4:])
-            syntheticVoice.speaking(response[7:])
-            # human_input = rec_unlimited.recording_to_text()
-            human_input = input("You: ")
+            logger.info(response)
+            syntheticVoice.speaking(response[5:])
+            human_input = rec_unlimited.recording_to_text()
+            # human_input = input("You: ")
             logger.info(user_name + ": " + human_input)
         except KeyboardInterrupt:
             syntheticVoice.speaking("会話を終了しています。しばらくお待ち下さい ")
