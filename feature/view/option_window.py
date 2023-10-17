@@ -45,7 +45,10 @@ while True:     # The Event Loop
     if event == "更新":
         Sql().change_name(values['name_input'])
         window.close()
-        user_name = Sql().select_name()
+        user_name = Sql().select('''
+                    SELECT  name 
+                    FROM    users
+                    ''')
         window = make_main_window()
     if event == "戻る":
         window.close()
