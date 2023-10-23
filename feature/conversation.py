@@ -11,11 +11,6 @@ from langchain.prompts import PromptTemplate
 from langchain.schema import BaseOutputParser
 from langchain.chat_models import ChatOpenAI
 import logging
-from langchain.schema import (
-    AIMessage,
-    HumanMessage,
-    SystemMessage,
-)
 from SyntheticVoice import SyntheticVoice
 from sql import Sql
 import rec_unlimited
@@ -51,9 +46,13 @@ def conversation():
                     ''')
 
     if user_name != None:
-        template = """あなたはドライバーの覚醒を維持するシステムであり、名前はもわすです。自分の名前を呼ぶときはもわすと呼んでください。
-        名前を定期的に呼びかけながら会話を行ってください。
-        また以下が前回の会話の要約内容です。会話を進める上での参考にしてください。
+        template = """あなたはドライバーと会話をしながら覚醒を維持するシステムであり、名前はもわすです。
+        # 条件
+        - ドライバーの関心がある内容で会話を行う
+        - ドライバーがはい、いいえで答えられる質問を行う(例：カレーは好きですか？、野球をやったことはありますか？)
+        - 質問のタイミングは会話が途切れた時、もしくは会話内容に新しい話題が存在する時
+        
+        以下がこれまでの会話の要約内容です。
         {summary}
 
         {chat_history}
@@ -95,15 +94,15 @@ def conversation():
     print(response[5:])
 
     # ここrefactorが必要
-    human_input = rec_unlimited.recording_to_text()
-    # human_input = input("You: ")
+    # human_input = rec_unlimited.recording_to_text()
+    human_input = input("You: ")
     logger.info(user_name + ": " + human_input)
     response = llm_chain.predict(human_input=human_input, summary=summary)
     logger.info(response)
 
     syntheticVoice.speaking(response[4:])
-    human_input = rec_unlimited.recording_to_text()
-    # human_input = input("You: ")
+    # human_input = rec_unlimited.recording_to_text()
+    human_input = input("You: ")
     logger.info(user_name + ": " + human_input)
 
     while True:
@@ -112,8 +111,8 @@ def conversation():
                 human_input=human_input, summary=summary)
             logger.info(response)
             syntheticVoice.speaking(response[5:])
-            human_input = rec_unlimited.recording_to_text()
-            # human_input = input("You: ")
+            # human_input = rec_unlimited.recording_to_text()
+            human_input = input("You: ")
             logger.info(user_name + ": " + human_input)
         except KeyboardInterrupt:
             syntheticVoice.speaking("会話を終了しています。しばらくお待ち下さい ")
