@@ -15,7 +15,7 @@ class Gpt:
             conversation_log = f.read()
             prompt = f"""
                     # 命令
-                    以下の会話内容から会話のトピック(単語や会話のテーマ)を教えてください
+                    以下の会話内容を要約し、100字以内でどのようなことについて話したか教えてください
 
                     {conversation_log}
                     """
