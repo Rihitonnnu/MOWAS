@@ -16,6 +16,9 @@ from sql import Sql
 import rec_unlimited
 from gpt import Gpt
 import beep
+import keyboard
+from embedding import Embedding
+from command import Command
 
 
 def conversation():
@@ -95,14 +98,33 @@ def conversation():
 
     # ここrefactorが必要
     # human_input = rec_unlimited.recording_to_text()
-    human_input = input("You: ")
+    if keyboard.read_key() == 's':
+        human_input = input("You: ")
+
+    if keyboard.read_key() == 'c':
+        human_input = input("You: ")
+        embedding = Embedding(human_input)
+        embedding_command = embedding.embedding()
+        command = Command(embedding_command)
+        command.command_execute()
+    # human_input = input("You: ")
     logger.info(user_name + ": " + human_input)
     response = llm_chain.predict(human_input=human_input, summary=summary)
     logger.info(response)
 
     syntheticVoice.speaking(response[4:])
     # human_input = rec_unlimited.recording_to_text()
-    human_input = input("You: ")
+    if keyboard.read_key() == 's':
+        human_input = input("You: ")
+
+    if keyboard.read_key() == 'c':
+        human_input = input("You: ")
+        command = Embedding.embedding(human_input[4:])
+        print(command)
+        exit(1)
+        Command(command)
+
+    # human_input = input("You: ")
     logger.info(user_name + ": " + human_input)
 
     while True:

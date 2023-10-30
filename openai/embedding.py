@@ -15,7 +15,7 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 with open('index.json') as f:
     INDEX = json.load(f)
 
-QUERY = "今自分はどのくらい眠い？"
+QUERY = "眠い"
 
 # 入力を複数にしてqueryを用意してコサイン類似度を用いて検索させる
 query = openai.Embedding.create(
@@ -25,6 +25,7 @@ query = openai.Embedding.create(
 
 query = query['data'][0]['embedding']
 
+# lambda関数を配列に適用
 results = map(
     lambda i: {
         'body': i['body'],
@@ -33,7 +34,7 @@ results = map(
     },
     INDEX
 )
-# コサイン類似度で降順（大きい順）にソート
+# コサイン類似度で降順（大きい順）にソートし、リストを作成
 results = sorted(results, key=lambda i: i['similarity'], reverse=True)
 
 # 類似性の高い選択肢を出力

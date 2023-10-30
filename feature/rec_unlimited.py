@@ -5,6 +5,7 @@ The soundfile module (https://python-soundfile.readthedocs.io/)
 has to be installed!
 
 """
+import keyboard
 import speechRecognitionGoogle
 import argparse
 import tempfile
@@ -114,12 +115,15 @@ def recording_to_text():
             with sd.InputStream(samplerate=args.samplerate, device=args.device,
                                 channels=args.channels, callback=callback):
                 print('#' * 80)
-                print('press Ctrl+C to stop the recording')
+                print('press Ctrl+Cで録音停止')
+                # print('コマンドを実行したい場合はpress C')
                 print('#' * 80)
                 while True:
                     file.write(q.get())
                     if pf_time.perf_counter()-start > 30:
                         raise Exception
+                    # if keyboard.read_key() == 'c':
+                    #     print('embedding実行準備')
     except KeyboardInterrupt:
         beep.low()
         print(end)
