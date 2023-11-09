@@ -109,7 +109,7 @@ def conversation():
         try:
             response = llm_chain.predict(
                 human_input=human_input, summary=summary)
-            logger.info("MOWAS" + response.replace('AI: ', ''))
+            logger.info("もわす: " + response.replace('AI: ', ''))
             syntheticVoice.speaking(response.replace('AI: ', ''))
             human_input = rec_unlimited.recording_to_text()
             # human_input = input("You: ")
