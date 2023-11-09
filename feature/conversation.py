@@ -90,29 +90,29 @@ def conversation():
     else:
         response = llm_chain.predict(
             human_input="こんにちは。あなたの名前はなんですか？名前の登録をしたいです")
-    syntheticVoice.speaking(response[5:])
-    print(response[5:])
+    syntheticVoice.speaking(response.replace('AI: ', ''))
+    print(response.replace('AI: ', ''))
 
     # ここrefactorが必要
-    # human_input = rec_unlimited.recording_to_text()
-    human_input = input("You: ")
+    human_input = rec_unlimited.recording_to_text()
+    # human_input = input("You: ")
     logger.info(user_name + ": " + human_input)
     response = llm_chain.predict(human_input=human_input, summary=summary)
     logger.info(response)
 
-    syntheticVoice.speaking(response[4:])
-    # human_input = rec_unlimited.recording_to_text()
-    human_input = input("You: ")
+    syntheticVoice.speaking(response.replace('AI: ', ''))
+    human_input = rec_unlimited.recording_to_text()
+    # human_input = input("You: ")
     logger.info(user_name + ": " + human_input)
 
     while True:
         try:
             response = llm_chain.predict(
                 human_input=human_input, summary=summary)
-            logger.info(response)
-            syntheticVoice.speaking(response[5:])
-            # human_input = rec_unlimited.recording_to_text()
-            human_input = input("You: ")
+            logger.info("MOWAS" + response.replace('AI: ', ''))
+            syntheticVoice.speaking(response.replace('AI: ', ''))
+            human_input = rec_unlimited.recording_to_text()
+            # human_input = input("You: ")
             logger.info(user_name + ": " + human_input)
         except KeyboardInterrupt:
             syntheticVoice.speaking("会話を終了しています。しばらくお待ち下さい ")
