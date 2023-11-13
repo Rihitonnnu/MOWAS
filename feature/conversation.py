@@ -47,12 +47,11 @@ def conversation():
 
     if user_name != None:
         template = """あなたはドライバーと会話をしながら覚醒を維持するシステムであり、名前はもわすです。
-        # 条件
-        - ドライバーの関心がある内容で会話を行う
-        - 会話内容、及びこれまでの会話の要約内容をもとにドライバーに発話を促す質問を行う
-        - 質問のタイミングは会話が途切れた時、もしくは会話内容に新しい話題が存在する時
+        # 成約条件
+        - 会話内容をもとにドライバーに発話を促す質問を行う
+        - 最初はどのような会話をしますか？と問いかけをする
         
-        以下がこれまでの会話の要約内容です。
+        以下が会話の要約内容です。参考にしてください
         {summary}
 
         {chat_history}
@@ -93,14 +92,13 @@ def conversation():
     syntheticVoice.speaking(response.replace('AI: ', ''))
     print(response.replace('AI: ', ''))
 
-    # ここrefactorが必要
     human_input = rec_unlimited.recording_to_text()
     # human_input = input("You: ")
     logger.info(user_name + ": " + human_input)
     response = llm_chain.predict(human_input=human_input, summary=summary)
     logger.info(response)
 
-    syntheticVoice.speaking(response.replace('AI: ', ''))
+    syntheticVoice.speaking(response.replace('AI: ', '').replace('もわす: ', ''))
     human_input = rec_unlimited.recording_to_text()
     # human_input = input("You: ")
     logger.info(user_name + ": " + human_input)
@@ -110,7 +108,8 @@ def conversation():
             response = llm_chain.predict(
                 human_input=human_input, summary=summary)
             logger.info("もわす: " + response.replace('AI: ', ''))
-            syntheticVoice.speaking(response.replace('AI: ', ''))
+            syntheticVoice.speaking(response.replace(
+                'AI: ', '').replace('もわす: ', ''))
             human_input = rec_unlimited.recording_to_text()
             # human_input = input("You: ")
             logger.info(user_name + ": " + human_input)
