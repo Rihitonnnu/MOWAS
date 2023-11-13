@@ -89,7 +89,7 @@ def conversation():
     else:
         response = llm_chain.predict(
             human_input="こんにちは。あなたの名前はなんですか？名前の登録をしたいです")
-    syntheticVoice.speaking(response.replace('AI: ', ''))
+    syntheticVoice.speaking(response.replace('AI: ', '').replace('もわす: ', ''))
     print(response.replace('AI: ', ''))
 
     human_input = rec_unlimited.recording_to_text()
