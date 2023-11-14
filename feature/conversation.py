@@ -16,6 +16,7 @@ from sql import Sql
 import rec_unlimited
 from gpt import Gpt
 import beep
+import key_extraction
 
 
 def conversation():
@@ -83,6 +84,8 @@ def conversation():
         verbose=False
     )
 
+    # 事前に入力をしておくことでMOWAS側からの応答から会話が始まる
+    # 分岐はドライバーの名前が入力されているかどうか
     if user_name != None:
         response = llm_chain.predict(
             human_input="こんにちは。あなたの名前はなんですか？私の名前は{}です。".format(user_name), summary=summary)
@@ -92,13 +95,14 @@ def conversation():
     syntheticVoice.speaking(response.replace('AI: ', '').replace('もわす: ', ''))
     print(response.replace('AI: ', ''))
 
+    # 利用者が初めて発話、それに対する応答
     human_input = rec_unlimited.recording_to_text()
     # human_input = input("You: ")
     logger.info(user_name + ": " + human_input)
     response = llm_chain.predict(human_input=human_input, summary=summary)
     logger.info(response.replace('AI: ', ''))
-
     syntheticVoice.speaking(response.replace('AI: ', '').replace('もわす: ', ''))
+
     human_input = rec_unlimited.recording_to_text()
     # human_input = input("You: ")
     logger.info(user_name + ": " + human_input)
@@ -111,6 +115,7 @@ def conversation():
             syntheticVoice.speaking(response.replace(
                 'AI: ', '').replace('もわす: ', ''))
             human_input = rec_unlimited.recording_to_text()
+            key_extraction(human_input)
             # human_input = input("You: ")
             logger.info(user_name + ": " + human_input)
         except KeyboardInterrupt:
