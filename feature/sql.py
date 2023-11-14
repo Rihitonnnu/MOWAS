@@ -1,5 +1,6 @@
 import mysql.connector
 import os
+import time
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -59,6 +60,26 @@ class Sql:
             cursor.close()
         if self.cnx is not None and self.cnx.is_connected():
             self.cnx.close()
+
+    def store_conversation(self):
+        cursor = self.cnx.cursor()
+        with open("../log/conversation.log", encoding="UTF-8") as f:
+            now = time.localtime()
+            d = time.strftime('%Y-%m-%d %H:%M:%S', now)
+            conversation_log = f.read()
+
+            query = f'''
+                    INSERT INTO conversations (content,created_at)
+                    VALUES ('{conversation_log}','{d}')
+                    '''
+
+            cursor.execute(query)
+            self.cnx.commit()
+            print('store conversation completed.')
+            if cursor is not None:
+                cursor.close()
+            if self.cnx is not None and self.cnx.is_connected():
+                self.cnx.close()
 
     def store_conversation_summary(self, summary):
         cursor = self.cnx.cursor()

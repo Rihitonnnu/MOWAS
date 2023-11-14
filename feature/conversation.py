@@ -47,12 +47,11 @@ def conversation():
 
     if user_name != None:
         template = """あなたはドライバーと会話をしながら覚醒を維持するシステムであり、名前はもわすです。
-        # 条件
-        - ドライバーの関心がある内容で会話を行う
-        - 会話内容、及びこれまでの会話の要約内容をもとにドライバーに発話を促す質問を行う
-        - 質問のタイミングは会話が途切れた時、もしくは会話内容に新しい話題が存在する時
+        # 成約条件
+        - 会話内容をもとにドライバーに発話を促す質問を行う
+        - 最初はどのような会話をしますか？と問いかけをする
         
-        以下がこれまでの会話の要約内容です。
+        以下が会話の要約内容です。参考にしてください
         {summary}
 
         {chat_history}
@@ -90,29 +89,29 @@ def conversation():
     else:
         response = llm_chain.predict(
             human_input="こんにちは。あなたの名前はなんですか？名前の登録をしたいです")
-    syntheticVoice.speaking(response[5:])
-    print(response[5:])
+    syntheticVoice.speaking(response.replace('AI: ', '').replace('もわす: ', ''))
+    print(response.replace('AI: ', ''))
 
-    # ここrefactorが必要
-    # human_input = rec_unlimited.recording_to_text()
-    human_input = input("You: ")
+    human_input = rec_unlimited.recording_to_text()
+    # human_input = input("You: ")
     logger.info(user_name + ": " + human_input)
     response = llm_chain.predict(human_input=human_input, summary=summary)
     logger.info(response)
 
-    syntheticVoice.speaking(response[4:])
-    # human_input = rec_unlimited.recording_to_text()
-    human_input = input("You: ")
+    syntheticVoice.speaking(response.replace('AI: ', '').replace('もわす: ', ''))
+    human_input = rec_unlimited.recording_to_text()
+    # human_input = input("You: ")
     logger.info(user_name + ": " + human_input)
 
     while True:
         try:
             response = llm_chain.predict(
                 human_input=human_input, summary=summary)
-            logger.info(response)
-            syntheticVoice.speaking(response[5:])
-            # human_input = rec_unlimited.recording_to_text()
-            human_input = input("You: ")
+            logger.info(response.replace('AI: ', ''))
+            syntheticVoice.speaking(response.replace(
+                'AI: ', '').replace('もわす: ', ''))
+            human_input = rec_unlimited.recording_to_text()
+            # human_input = input("You: ")
             logger.info(user_name + ": " + human_input)
         except KeyboardInterrupt:
             syntheticVoice.speaking("会話を終了しています。しばらくお待ち下さい ")
