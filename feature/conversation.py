@@ -49,7 +49,7 @@ def conversation():
         template = """あなたはドライバーと会話をしながら覚醒を維持するシステムであり、名前はもわすです。
         # 成約条件
         - 会話内容をもとにドライバーに発話を促す質問を行う
-        - 最初はどのような会話をしますか？と問いかけをする
+        - 最初はどのような話題でお話しますか？と問いかけをする
         
         以下が会話の要約内容です。参考にしてください
         {summary}
@@ -96,7 +96,7 @@ def conversation():
     # human_input = input("You: ")
     logger.info(user_name + ": " + human_input)
     response = llm_chain.predict(human_input=human_input, summary=summary)
-    logger.info(response)
+    logger.info(response.replace('AI: ', ''))
 
     syntheticVoice.speaking(response.replace('AI: ', '').replace('もわす: ', ''))
     human_input = rec_unlimited.recording_to_text()
