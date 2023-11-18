@@ -117,6 +117,7 @@ def recording_to_text():
                 print('press Ctrl+C to stop the recording')
                 print('#' * 80)
                 while True:
+                    # soundfileに書き込んでいる、writeはsoundfileのメソッド
                     file.write(q.get())
                     if pf_time.perf_counter()-start > 30:
                         raise Exception
