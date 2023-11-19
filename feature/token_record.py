@@ -27,10 +27,10 @@ class TokenRecord:
 
         write_wb.save("../data/token.xlsx")
 
+    # トークンを記録する
     def token_record(self, cb, cnt):
         data = [cnt, cb.prompt_tokens, cb.completion_tokens, cb.total_tokens]
         # シートを変数に名前で格納
-        # data = [cnt, 10, 10, 20]
         for i in range(1, 5):
             self.write_ws.cell(row=cnt+1, column=i, value=data[i-1])
 

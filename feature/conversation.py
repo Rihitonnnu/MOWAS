@@ -104,6 +104,7 @@ def conversation():
         token_record.token_record(cb, conv_cnt)
         conv_cnt += 1
 
+    with get_openai_callback() as cb:
         # 利用者が初めて発話、それに対する応答
         # human_input = rec_unlimited.recording_to_text()
         human_input = input("You: ")
@@ -112,17 +113,23 @@ def conversation():
         logger.info(response.replace('AI: ', ''))
         syntheticVoice.speaking(response.replace(
             'AI: ', '').replace('もわす: ', ''))
-        print(cb)
-        exit(1)
 
-        # human_input = rec_unlimited.recording_to_text()
-        human_input = input("You: ")
-        logger.info(user_name + ": " + human_input)
+        token_record.token_record(cb, conv_cnt)
+        conv_cnt += 1
 
-        while True:
-            try:
+    # human_input = rec_unlimited.recording_to_text()
+    human_input = input("You: ")
+    logger.info(user_name + ": " + human_input)
+
+    while True:
+        try:
+            with get_openai_callback() as cb:
                 response = llm_chain.predict(
                     human_input=human_input, summary=summary)
+
+                token_record.token_record(cb, conv_cnt)
+                conv_cnt += 1
+
                 logger.info(response.replace('AI: ', ''))
                 syntheticVoice.speaking(response.replace(
                     'AI: ', '').replace('もわす: ', ''))
@@ -130,10 +137,12 @@ def conversation():
                 key_extraction(human_input)
                 human_input = input("You: ")
                 logger.info(user_name + ": " + human_input)
-            except KeyboardInterrupt:
-                syntheticVoice.speaking("会話を終了しています。しばらくお待ち下さい ")
-                summary = Gpt().make_conversation_summary()
-                Sql().store_conversation_summary(summary)
-                Sql().store_conversation()
-                beep.high()
-                exit(1)
+        except KeyboardInterrupt:
+            syntheticVoice.speaking("会話を終了しています。しばらくお待ち下さい ")
+
+            summary = Gpt().make_conversation_summary()
+            Sql().store_conversation_summary(summary)
+            Sql().store_conversation()
+
+            beep.high()
+            exit(1)
