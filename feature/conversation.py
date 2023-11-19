@@ -20,14 +20,21 @@ from gpt import Gpt
 import beep
 import key_extraction
 import log_instance
+from token_record import TokenRecord
 
 
 def conversation():
+    # ログの設定
     logger = log_instance.log_instance('conversation')
+
+    # 環境変数読み込み
     load_dotenv()
     openai.api_key = os.environ["OPENAI_API_KEY"]
-    syntheticVoice = SyntheticVoice()
 
+    syntheticVoice = SyntheticVoice()
+    token_record = TokenRecord()
+
+    # SQLクエリ設定
     user_name = Sql().select('''
                     SELECT  name 
                     FROM    users
@@ -78,6 +85,9 @@ def conversation():
     )
 
     with get_openai_callback() as cb:
+        # 会話回数を初期化
+        conv_cnt = 1
+
         # 事前に入力をしておくことでMOWAS側からの応答から会話が始まる
         # 分岐はドライバーの名前が入力されているかどうか
         if user_name != None:
@@ -90,6 +100,10 @@ def conversation():
             'AI: ', '').replace('もわす: ', ''))
         print(response.replace('AI: ', ''))
 
+        # トークンをexcelに記録
+        token_record.token_record(cb, conv_cnt)
+        conv_cnt += 1
+
         # 利用者が初めて発話、それに対する応答
         # human_input = rec_unlimited.recording_to_text()
         human_input = input("You: ")
@@ -98,6 +112,8 @@ def conversation():
         logger.info(response.replace('AI: ', ''))
         syntheticVoice.speaking(response.replace(
             'AI: ', '').replace('もわす: ', ''))
+        print(cb)
+        exit(1)
 
         # human_input = rec_unlimited.recording_to_text()
         human_input = input("You: ")

@@ -8,23 +8,30 @@ if not os.path.exists('../data/token.xlsx'):
     write_wb = openpyxl.Workbook()
     write_wb.save('../data/token.xlsx')
 
-# シートを会話したときの日時で作成
-write_wb.create_sheet(title=datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
-write_wb.save("../data/token.xlsx")
 
+class TokenRecord:
+    def __init__(self):
+        # シートを会話したときの日時で作成
+        self.title = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+        write_wb.create_sheet(title=self.title)
 
-def token_record(cb):
-    data = [cb.prompt_tokens, cb.completion_tokens, cb.total_tokens]
+        # シートを変数に名前で格納
+        self.write_ws = write_wb[self.title]
 
-    # シートを変数に名前で格納
-    write_ws = write_wb["Sheet"]
-    # cはセル番地でA1のセルを取得する
-    c = write_ws["A1"]
-    # c2は行列番号でA2のセルを取得する
-    c2 = write_ws.cell(1, 2)
-    # 変数cにvalueを付けて値を設定する
-    c.value = "A1です"
-    c2.value = "B1です"
+        c1 = self.write_ws["B1"]
+        c2 = self.write_ws.cell(1, 3)
+        c3 = self.write_ws.cell(1, 4)
+        c1.value = "プロンプト"
+        c2.value = "会話"
+        c3.value = "合計"
 
-    # Book_write.xlsxに上書保存
-    write_wb.save("../data/token.xlsx")
+        write_wb.save("../data/token.xlsx")
+
+    def token_record(self, cb, cnt):
+        data = [cnt, cb.prompt_tokens, cb.completion_tokens, cb.total_tokens]
+        # シートを変数に名前で格納
+        # data = [cnt, 10, 10, 20]
+        for i in range(1, 5):
+            self.write_ws.cell(row=cnt+1, column=i, value=data[i-1])
+
+        write_wb.save("../data/token.xlsx")
