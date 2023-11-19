@@ -5,3 +5,4 @@ sound/
 log/
 wip/
 *__pycache__/
+data/
