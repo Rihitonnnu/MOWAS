@@ -24,12 +24,8 @@ import log_instance
 
 def conversation():
     logger = log_instance.log_instance('conversation')
-    token_logger = log_instance.log_instance('token')
-
     load_dotenv()
-
     openai.api_key = os.environ["OPENAI_API_KEY"]
-
     syntheticVoice = SyntheticVoice()
 
     user_name = Sql().select('''
@@ -41,6 +37,7 @@ def conversation():
                     FROM    users
                     ''')
 
+    # テンプレート,プロンプトの設定
     if user_name != None:
         template = """あなたはドライバーと会話をしながら覚醒を維持するシステムであり、名前はもわすです。
         # 成約条件
@@ -62,12 +59,13 @@ def conversation():
         {chat_history}
         Human: {human_input}
         """
-
     human_template = "{text}"
 
     prompt = PromptTemplate(
         input_variables=["chat_history", "summary", "human_input"], template=template
     )
+
+    # 記憶するmemoryの設定
     memory = ConversationBufferWindowMemory(
         k=1, memory_key="chat_history", input_key="human_input")
 
@@ -92,16 +90,11 @@ def conversation():
             'AI: ', '').replace('もわす: ', ''))
         print(response.replace('AI: ', ''))
 
-        token_logger(cb)
-        # exit(1)
-
         # 利用者が初めて発話、それに対する応答
         # human_input = rec_unlimited.recording_to_text()
         human_input = input("You: ")
         logger.info(user_name + ": " + human_input)
         response = llm_chain.predict(human_input=human_input, summary=summary)
-        # token_logger(cb)
-        # print(cb)
         logger.info(response.replace('AI: ', ''))
         syntheticVoice.speaking(response.replace(
             'AI: ', '').replace('もわす: ', ''))
