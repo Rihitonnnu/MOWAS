@@ -18,7 +18,6 @@ from sql import Sql
 import rec_unlimited
 from gpt import Gpt
 import beep
-import key_extraction
 import log_instance
 from token_record import TokenRecord
 
@@ -111,7 +110,6 @@ def conversation():
         # 利用者が初めて発話、それに対する応答
         # human_input = rec_unlimited.recording_to_text()
         human_input = input("You: ")
-        # key_extraction.key_extraction(human_input)
         logger.info(user_name + ": " + human_input)
         response = llm_chain.predict(human_input=human_input, summary=summary)
         logger.info(response.replace('AI: ', ''))
@@ -121,13 +119,12 @@ def conversation():
         token_record.token_record(cb, conv_cnt)
         conv_cnt += 1
 
-    # human_input = rec_unlimited.recording_to_text()
-    human_input = input("You: ")
-    logger.info(user_name + ": " + human_input)
-
     while True:
         try:
             with get_openai_callback() as cb:
+                # human_input = rec_unlimited.recording_to_text()
+                human_input = input("You: ")
+                logger.info(user_name + ": " + human_input)
                 response = llm_chain.predict(
                     human_input=human_input, summary=summary)
 
@@ -137,13 +134,8 @@ def conversation():
                 logger.info(response.replace('AI: ', ''))
                 syntheticVoice.speaking(response.replace(
                     'AI: ', '').replace('もわす: ', ''))
-                # human_input = rec_unlimited.recording_to_text()
-                # key_extraction(human_input)
-                human_input = input("You: ")
-                logger.info(user_name + ": " + human_input)
         except KeyboardInterrupt:
-            syntheticVoice.speaking("会話を終了しています。しばらくお待ち下さい ")
-
+            # syntheticVoice.speaking("会話を終了しています。しばらくお待ち下さい ")
             summary = Gpt().make_conversation_summary()
             Sql().store_conversation_summary(summary)
             Sql().store_conversation()
