@@ -74,7 +74,10 @@ def conversation():
 
     # 記憶するmemoryの設定
     memory = ConversationBufferWindowMemory(
-        k=1, memory_key="chat_history", input_key="human_input")
+        k=3, memory_key="chat_history", input_key="human_input")
+
+    # memory = ConversationBufferMemory(
+    #     memory_key="chat_history", input_key="human_input")
 
     llm = ChatOpenAI(temperature=0.1)
     llm_chain = LLMChain(
@@ -108,6 +111,7 @@ def conversation():
         # 利用者が初めて発話、それに対する応答
         # human_input = rec_unlimited.recording_to_text()
         human_input = input("You: ")
+        # key_extraction.key_extraction(human_input)
         logger.info(user_name + ": " + human_input)
         response = llm_chain.predict(human_input=human_input, summary=summary)
         logger.info(response.replace('AI: ', ''))
@@ -134,7 +138,7 @@ def conversation():
                 syntheticVoice.speaking(response.replace(
                     'AI: ', '').replace('もわす: ', ''))
                 # human_input = rec_unlimited.recording_to_text()
-                key_extraction(human_input)
+                # key_extraction(human_input)
                 human_input = input("You: ")
                 logger.info(user_name + ": " + human_input)
         except KeyboardInterrupt:
