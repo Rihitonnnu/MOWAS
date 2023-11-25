@@ -10,3 +10,4 @@ feature/xml/
 runs/
 test/img/
 *yolov8n.pt
+feature/json/
