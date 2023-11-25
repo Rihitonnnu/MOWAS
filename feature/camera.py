@@ -1,10 +1,10 @@
 # cv2のインポート前にカメラに関する設定を行う
 # https://github.com/opencv/opencv/issues/17687
+import sys
+import time as pf_time
+import cv2
 import os
 os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
-import cv2
-import time as pf_time
-import sys
 
 
 cascade = cv2.CascadeClassifier('xml/haarcascade_frontalface_alt2.xml')
@@ -15,7 +15,7 @@ cap = cv2.VideoCapture(0)
 wink_count = 0
 
 start = pf_time.perf_counter()
-wink_flg=False
+wink_flg = False
 
 while True:
     ret, rgb = cap.read()
@@ -40,20 +40,20 @@ while True:
 
         # 瞬目回数を測定する際に複数回加算してしまうのを防ぐためフラグを用いている
         if len(eyes) == 1:
-            wink_flg=False
+            wink_flg = False
 
         # 目が認識されなくなった時
         if len(eyes) == 0:
             if not wink_flg:
                 wink_count += 1
                 print("count!")
-                wink_flg=True
-            # cv2.putText(rgb, "Sleepy eyes. Wake up!",
-            #             (10, 100), cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 255), 2, cv2.LINE_AA)
+                wink_flg = True
 
     cv2.imshow('frame', rgb)
-    if pf_time.perf_counter()-start >= 10:
-        break  # esc to quit
+    key = cv2.waitKey(10)
+    end = pf_time.perf_counter()
+    if end-start >= 10:
+        break
 
 print(wink_count)
 # メモリを解放して終了するためのコマンド

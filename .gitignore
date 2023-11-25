@@ -7,3 +7,6 @@ wip/
 *__pycache__/
 data/
 feature/xml/
+runs/
+test/img/
+*yolov8n.pt
