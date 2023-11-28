@@ -6,6 +6,7 @@ from imutils import face_utils
 from scipy.spatial import distance
 import beep
 
+# 測定をするときは前髪ない方がいいかも
 cap = cv2.VideoCapture(0)
 face_cascade = cv2.CascadeClassifier('xml/haarcascade_frontalface_alt2.xml')
 face_parts_detector = dlib.shape_predictor('dlib/shape_predictor_68_face_landmarks.dat')
