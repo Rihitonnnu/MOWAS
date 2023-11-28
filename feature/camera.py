@@ -2,9 +2,9 @@
 # https://github.com/opencv/opencv/issues/17687
 import sys
 import time as pf_time
-import cv2
 import os
 os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
+import cv2
 
 
 cascade = cv2.CascadeClassifier('xml/haarcascade_frontalface_alt2.xml')
@@ -17,12 +17,13 @@ wink_count = 0
 start = pf_time.perf_counter()
 wink_flg = False
 
+
 while True:
     ret, rgb = cap.read()
 
     gray = cv2.cvtColor(rgb, cv2.COLOR_BGR2GRAY)
     faces = cascade.detectMultiScale(
-        gray, scaleFactor=1.11, minNeighbors=3, minSize=(100, 100))
+        gray, scaleFactor=1.1, minNeighbors=4, minSize=(100, 100))
 
     if len(faces) == 1:
         x, y, w, h = faces[0, :]
