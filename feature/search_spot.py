@@ -1,34 +1,40 @@
-# 環境変数の準備
-from langchain import OpenAI, SerpAPIWrapper, LLMChain
-from langchain.agents import ZeroShotAgent, Tool, AgentExecutor, load_tools
+import pprint
+import requests
+import json
 import os
-from langchain.chat_models import ChatOpenAI
 from dotenv import load_dotenv
 load_dotenv()
 
+# APIのエンドポイントURL
+url = "https://places.googleapis.com/v1/places:searchNearby"
 
-def search_spot():
-    # ツールの準備
-    tools = load_tools(["google-search"], llm=ChatOpenAI())
+# リクエストボディ
+payload = {
+    "includedTypes": ["restaurant"],
+    "maxResultCount": 2,
+    "locationRestriction": {
+        "circle": {
+            "center": {
+                "latitude": 37.7937,
+                "longitude": -122.3965},
+            "radius": 500.0
+        }
+    }
+}
 
-    # プロンプトテンプレートの準備
-    prefix = """次の質問にできる限り答えてください。次のツールにアクセスできます:"""
-    suffix = """始めましょう! 
+# ヘッダー
+headers = {
+    'Content-Type': 'application/json',
+    'X-Goog-Api-Key': os.environ["GOOGLE_API_KEY"],  # 実際のAPIキーに置き換えてください
+    'X-Goog-FieldMask': 'places.displayName',
+    'Accept-Language': 'ja'  # 日本語での結果を得るために追加
+}
 
-    Question: {input}
-    {agent_scratchpad}"""
+# POSTリクエストを実行
+response = requests.post(url, headers=headers, data=json.dumps(payload))
 
-    prompt = ZeroShotAgent.create_prompt(
-        tools,
-        prefix=prefix,
-        suffix=suffix,
-        input_variables=["input", "agent_scratchpad"]
-    )
+# レスポンスのJSONを取得
+data = response.json()
 
-    # エージェントの準備
-    llm_chain = LLMChain(llm=ChatOpenAI(temperature=0), prompt=prompt)
-    agent = ZeroShotAgent(llm_chain=llm_chain, tools=tools)
-    agent_executor = AgentExecutor.from_agent_and_tools(
-        agent=agent, tools=tools, verbose=True)
-
-    agent_executor.run("福岡県福岡市西区のカフェを一つ教えて")
+# 結果を表示（pprintモジュールを使用して見やすく表示）
+pprint.pprint(data)
