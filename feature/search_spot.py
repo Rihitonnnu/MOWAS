@@ -10,13 +10,13 @@ url = "https://places.googleapis.com/v1/places:searchNearby"
 
 # リクエストボディ
 payload = {
-    "includedTypes": ["restaurant"],
-    "maxResultCount": 2,
+    "includedTypes": ["cafe"],
+    "maxResultCount": 1,
     "locationRestriction": {
         "circle": {
             "center": {
-                "latitude": 37.7937,
-                "longitude": -122.3965},
+                "latitude": 33.5895,
+                "longitude": 130.3197},
             "radius": 500.0
         }
     }
