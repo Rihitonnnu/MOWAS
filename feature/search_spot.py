@@ -31,4 +31,6 @@ def search_spot():
     agent_executor = AgentExecutor.from_agent_and_tools(
         agent=agent, tools=tools, verbose=True)
 
-    agent_executor.run("福岡県福岡市西区のカフェを一つ教えて")
+    agent_executor.run("さいとぴあはどこにある？")
+
+search_spot()
