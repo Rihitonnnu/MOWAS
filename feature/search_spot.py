@@ -75,11 +75,15 @@ class SearchSpot:
 
         # レスポンスのJSONを取得
         data = response.json()
+        places = data['places']
+
+        texts = [place['displayName']['text'] for place in places]
+
+        for text in texts:
+            print(text)
 
         # 結果を表示（pprintモジュールを使用して見やすく表示）
-        pprint.pprint(data)
+        # pprint.pprint(data)
 
         # 検索結果がなかった場合の例外処理を入れておく必要がある
-
-
-SearchSpot().search_spot()
+# SearchSpot().search_spot()
