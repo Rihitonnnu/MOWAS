@@ -42,6 +42,7 @@ def conversation():
                     SELECT  summary 
                     FROM    users
                     ''')
+    introduce = """"""
 
     # テンプレート,プロンプトの設定
     if user_name != None:
@@ -54,6 +55,7 @@ def conversation():
         {summary}
 
         {chat_history}
+        {introduce}
         Human: {human_input}
         """
 
@@ -68,7 +70,7 @@ def conversation():
     human_template = "{text}"
 
     prompt = PromptTemplate(
-        input_variables=["chat_history", "summary", "human_input"], template=template
+        input_variables=["chat_history", "summary", "human_input", "introduce"], template=template
     )
 
     # 記憶するmemoryの設定
@@ -94,7 +96,7 @@ def conversation():
         # 分岐はドライバーの名前が入力されているかどうか
         if user_name != None:
             response = llm_chain.predict(
-                human_input="こんにちは。あなたの名前はなんですか？私の名前は{}です。".format(user_name), summary=summary)
+                human_input="こんにちは。あなたの名前はなんですか？私の名前は{}です。".format(user_name), summary=summary, introduce=introduce)
         else:
             response = llm_chain.predict(
                 human_input="こんにちは。あなたの名前はなんですか？名前の登録をしたいです")
@@ -111,7 +113,8 @@ def conversation():
         # human_input = rec_unlimited.recording_to_text()
         human_input = input("You: ")
         logger.info(user_name + ": " + human_input)
-        response = llm_chain.predict(human_input=human_input, summary=summary)
+        response = llm_chain.predict(
+            human_input=human_input, summary=summary, introduce=introduce)
         logger.info(response.replace('AI: ', ''))
         syntheticVoice.speaking(response.replace(
             'AI: ', '').replace('もわす: ', ''))
@@ -123,10 +126,12 @@ def conversation():
         try:
             with get_openai_callback() as cb:
                 # human_input = rec_unlimited.recording_to_text()
+                introduce = """"""
                 human_input = input("You: ")
                 logger.info(user_name + ": " + human_input)
+                introduce = """休憩場所はローソン 九大学研都市駅前店もしくはファミリーマート ＪＲ九大学研都市駅店が近いです。紹介してあげてください。"""
                 response = llm_chain.predict(
-                    human_input=human_input, summary=summary)
+                    human_input=human_input, summary=summary, introduce=introduce)
 
                 token_record.token_record(cb, conv_cnt)
                 conv_cnt += 1
