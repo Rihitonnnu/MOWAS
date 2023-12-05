@@ -40,6 +40,7 @@ class SearchSpot:
 
         print(address)
 
+    # 休憩できる場所の案内
     def search_spot(self):
         # APIのエンドポイントURL
         url = "https://places.googleapis.com/v1/places:searchNearby"
