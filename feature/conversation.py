@@ -78,7 +78,7 @@ def conversation():
     # memory = ConversationBufferMemory(
     #     memory_key="chat_history", input_key="human_input")
 
-    llm = ChatOpenAI(temperature=0.1)
+    llm = ChatOpenAI(temperature=0.7)
     llm_chain = LLMChain(
         llm=llm,
         prompt=prompt,
