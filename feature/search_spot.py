@@ -80,8 +80,11 @@ class SearchSpot:
 
         texts = [place['displayName']['text'] for place in places]
 
-        result = '休憩場所は{}と{}です。紹介してあげてください。'.format(texts[0], texts[1])
-        print(result)
+        result = """ドライバーが眠くなっています。近くの休憩場所は{}と{}です。紹介してあげてください。""".format(
+            texts[0], texts[1])
+        # print(result)
+
+        return result
         # for text in texts:
         #     print(text)
 
@@ -89,4 +92,4 @@ class SearchSpot:
         # pprint.pprint(data)
 
         # 検索結果がなかった場合の例外処理を入れておく必要がある
-SearchSpot().search_spot()
+# SearchSpot().search_spot()

@@ -20,6 +20,7 @@ from gpt import Gpt
 import beep
 import log_instance
 from token_record import TokenRecord
+from search_spot import SearchSpot
 
 
 def conversation():
@@ -126,10 +127,14 @@ def conversation():
         try:
             with get_openai_callback() as cb:
                 # human_input = rec_unlimited.recording_to_text()
+
+                # ここで紹介するかしないのか判定が入る、あともう少しうまくかけるかも
                 introduce = """"""
                 human_input = input("You: ")
                 logger.info(user_name + ": " + human_input)
-                introduce = """休憩場所はローソン 九大学研都市駅前店もしくはファミリーマート ＪＲ九大学研都市駅店が近いです。紹介してあげてください。"""
+                introduce = SearchSpot().search_spot()
+                # introduce = """休憩場所はローソン 九大学研都市駅前店もしくはファミリーマート ＪＲ九大学研都市駅店が近いです。紹介してあげてください。"""
+
                 response = llm_chain.predict(
                     human_input=human_input, summary=summary, introduce=introduce)
 
