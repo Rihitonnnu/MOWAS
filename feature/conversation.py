@@ -1,18 +1,11 @@
 import os
-import logging
 from dotenv import load_dotenv
 import openai
-from langchain.memory import ConversationBufferMemory
 from langchain.memory import ConversationBufferWindowMemory
-from langchain.llms import OpenAI
-from langchain.chains import ConversationChain
-from langchain.prompts import ChatPromptTemplate
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
-from langchain.schema import BaseOutputParser
 from langchain.chat_models import ChatOpenAI
 from langchain.callbacks import get_openai_callback
-import logging
 from SyntheticVoice import SyntheticVoice
 from sql import Sql
 import rec_unlimited
