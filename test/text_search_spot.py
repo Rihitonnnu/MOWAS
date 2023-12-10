@@ -1,3 +1,4 @@
+import pprint
 import requests
 import json
 import os
@@ -5,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-class SearchSpot:
+class TextSearchSpot:
     def __init__(self) -> None:
         pass
 
@@ -39,25 +40,14 @@ class SearchSpot:
 
         print(address)
 
-    # 休憩できる場所の案内
-    def search_spot(self):
+    def text_search_spot(self):
         # APIのエンドポイントURL
-        url = "https://places.googleapis.com/v1/places:searchNearby"
+        url = 'https://places.googleapis.com/v1/places:searchText'
 
         # リクエストボディ
         payload = {
-            "includedTypes": ["convenience_store"],
-            "maxResultCount": 1,
-            "locationRestriction": {
-                "circle": {
-                    "center": {
-                        "latitude": 33.576924,
-                        "longitude": 130.260898
-                    },
-                    "radius": 500.0
-                }
-            },
-            "rankPreference": "DISTANCE",
+            'textQuery': '福岡県福岡市西区西都の休憩場所',
+            'maxResultCount': 2
         }
 
         # ヘッダー情報
@@ -66,25 +56,18 @@ class SearchSpot:
             'X-Goog-Api-Key': os.environ["GOOGLE_API_KEY"],  # あなたのGoogle APIキー
             'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.priceLevel',
             'Accept-Language': 'ja'  # 日本語での結果を得るために追加
-
         }
 
         # POSTリクエストを実行
-        response = requests.post(url, headers=headers,
-                                 data=json.dumps(payload))
+        response = requests.post(url, json=payload, headers=headers)
 
         # レスポンスのJSONを取得
         data = response.json()
-        places = data['places']
 
-        texts = [place['displayName']['text'] for place in places]
-
-        result = """ドライバーが眠くなっています。近くの休憩場所は{}です。紹介してあげてください。""".format(
-            texts[0])
-
-        # print(result)
-
-        return result
+        # 結果を表示
+        pprint.pprint(data)
 
         # 検索結果がなかった場合の例外処理を入れておく必要がある
-# SearchSpot().search_spot()
+
+
+# TextSearchSpot().text_search_spot()

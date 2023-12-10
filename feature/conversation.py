@@ -1,18 +1,11 @@
 import os
-import logging
 from dotenv import load_dotenv
 import openai
-from langchain.memory import ConversationBufferMemory
 from langchain.memory import ConversationBufferWindowMemory
-from langchain.llms import OpenAI
-from langchain.chains import ConversationChain
-from langchain.prompts import ChatPromptTemplate
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
-from langchain.schema import BaseOutputParser
 from langchain.chat_models import ChatOpenAI
 from langchain.callbacks import get_openai_callback
-import logging
 from SyntheticVoice import SyntheticVoice
 from sql import Sql
 import rec_unlimited
@@ -20,6 +13,7 @@ from gpt import Gpt
 import beep
 import log_instance
 from token_record import TokenRecord
+from search_spot import SearchSpot
 
 
 def conversation():
@@ -42,20 +36,20 @@ def conversation():
                     SELECT  summary 
                     FROM    users
                     ''')
+    introduce = """"""
 
     # テンプレート,プロンプトの設定
     if user_name != None:
         template = """あなたは相手と会話をすることで覚醒を維持するシステムであり、名前はもわすです。
         # 条件
         - 相手の興味のある話題で会話をする
-        - 相手の発話内容からトピックを抽出する
-        - トピックが相手にとってどのようなものか問いかけをする
         - 最初はどのような話題でお話しますか？と問いかけをする
         
         以下が会話の要約内容です。参考にしてください
         {summary}
 
         {chat_history}
+        {introduce}
         Human: {human_input}
         """
 
@@ -70,7 +64,7 @@ def conversation():
     human_template = "{text}"
 
     prompt = PromptTemplate(
-        input_variables=["chat_history", "summary", "human_input"], template=template
+        input_variables=["chat_history", "summary", "human_input", "introduce"], template=template
     )
 
     # 記憶するmemoryの設定
@@ -80,7 +74,7 @@ def conversation():
     # memory = ConversationBufferMemory(
     #     memory_key="chat_history", input_key="human_input")
 
-    llm = ChatOpenAI(temperature=0.1)
+    llm = ChatOpenAI(temperature=0.7)
     llm_chain = LLMChain(
         llm=llm,
         prompt=prompt,
@@ -96,7 +90,7 @@ def conversation():
         # 分岐はドライバーの名前が入力されているかどうか
         if user_name != None:
             response = llm_chain.predict(
-                human_input="こんにちは。あなたの名前はなんですか？私の名前は{}です。".format(user_name), summary=summary)
+                human_input="こんにちは。あなたの名前はなんですか？私の名前は{}です。".format(user_name), summary=summary, introduce=introduce)
         else:
             response = llm_chain.predict(
                 human_input="こんにちは。あなたの名前はなんですか？名前の登録をしたいです")
@@ -113,7 +107,8 @@ def conversation():
         # human_input = rec_unlimited.recording_to_text()
         human_input = input("You: ")
         logger.info(user_name + ": " + human_input)
-        response = llm_chain.predict(human_input=human_input, summary=summary)
+        response = llm_chain.predict(
+            human_input=human_input, summary=summary, introduce=introduce)
         logger.info(response.replace('AI: ', ''))
         syntheticVoice.speaking(response.replace(
             'AI: ', '').replace('もわす: ', ''))
@@ -125,10 +120,16 @@ def conversation():
         try:
             with get_openai_callback() as cb:
                 # human_input = rec_unlimited.recording_to_text()
+
+                # ここで紹介するかしないのか判定が入る、あともう少しうまくかけるかも
+                introduce = """"""
                 human_input = input("You: ")
                 logger.info(user_name + ": " + human_input)
+                introduce = SearchSpot().search_spot()
+                # introduce = """休憩場所はローソン 九大学研都市駅前店もしくはファミリーマート ＪＲ九大学研都市駅店が近いです。紹介してあげてください。"""
+
                 response = llm_chain.predict(
-                    human_input=human_input, summary=summary)
+                    human_input=human_input, summary=summary, introduce=introduce)
 
                 token_record.token_record(cb, conv_cnt)
                 conv_cnt += 1
