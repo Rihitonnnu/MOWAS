@@ -1,4 +1,3 @@
-import pprint
 import requests
 import json
 import os
@@ -48,7 +47,7 @@ class SearchSpot:
         # リクエストボディ
         payload = {
             "includedTypes": ["convenience_store"],
-            "maxResultCount": 2,
+            "maxResultCount": 1,
             "locationRestriction": {
                 "circle": {
                     "center": {
@@ -80,16 +79,12 @@ class SearchSpot:
 
         texts = [place['displayName']['text'] for place in places]
 
-        result = """ドライバーが眠くなっています。近くの休憩場所は{}と{}です。紹介してあげてください。""".format(
-            texts[0], texts[1])
+        result = """ドライバーが眠くなっています。近くの休憩場所は{}です。紹介してあげてください。""".format(
+            texts[0])
+
         # print(result)
 
         return result
-        # for text in texts:
-        #     print(text)
-
-        # 結果を表示（pprintモジュールを使用して見やすく表示）
-        # pprint.pprint(data)
 
         # 検索結果がなかった場合の例外処理を入れておく必要がある
 # SearchSpot().search_spot()
