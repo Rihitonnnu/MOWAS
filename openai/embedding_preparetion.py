@@ -9,7 +9,7 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 
 index = []
 
-options = ['会話終了', '会話開始', '周辺情報の教示', '眠気を示す指標の教示']
+options = ['会話終了', '会話開始', '周辺情報の教示', '眠い']
 for option in options:
     res = openai.Embedding.create(
         model='text-embedding-ada-002',
