@@ -56,7 +56,6 @@ class TextSearchSpot:
             'X-Goog-Api-Key': os.environ["GOOGLE_API_KEY"],  # あなたのGoogle APIキー
             'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.priceLevel',
             'Accept-Language': 'ja'  # 日本語での結果を得るために追加
-
         }
 
         # POSTリクエストを実行
