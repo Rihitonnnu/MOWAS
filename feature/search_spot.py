@@ -2,57 +2,41 @@ import requests
 import json
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
 
 class SearchSpot:
     def __init__(self) -> None:
-        pass
+        self.place_id = ''
 
-    # 住所を逆エンコードする(少し精度悪め)
-    def reverse_geocoder():
-        # Yahoo!リバースジオコーダAPIのURL
+    def reverse_geocoder(self, lat, lon):
         url = "https://map.yahooapis.jp/geocode/V1/geoCoder"
-
-        # いずれは関数として使ってあげたい
-
-        # APIキーと緯度経度をパラメータとして設定
         params = {
             "appid": os.environ["CLIENT_ID"],
-            "lat": "33.67187",
-            "lon": "130.441383",
+            "lat": lat,
+            "lon": lon,
             "output": "json"
         }
-
-        # APIにリクエストを送信
         response = requests.get(url, params=params)
-
-        # レスポンスをJSON形式で取得
         data = response.json()
-
-        # JSONファイルとして保存
-        with open('json/reverse_geocoder.json', 'w') as f:
-            json.dump(data, f)
-
-        # 住所情報を取得
+        if response.status_code != 200 or 'Feature' not in data:
+            raise Exception('Failed to get address')
         address = data["Feature"][0]["Property"]["Address"]
-
         print(address)
 
-    # 休憩できる場所の案内
-    def search_spot(self):
-        # APIのエンドポイントURL
+    # 案内文とplace_idを返却
+    def search_spot(self, lat, lon):
         url = "https://places.googleapis.com/v1/places:searchNearby"
 
-        # リクエストボディ
         payload = {
             "includedTypes": ["convenience_store"],
             "maxResultCount": 1,
             "locationRestriction": {
                 "circle": {
                     "center": {
-                        "latitude": 33.576924,
-                        "longitude": 130.260898
+                        "latitude": lat,
+                        "longitude": lon
                     },
                     "radius": 500.0
                 }
@@ -60,31 +44,45 @@ class SearchSpot:
             "rankPreference": "DISTANCE",
         }
 
-        # ヘッダー情報
         headers = {
             'Content-Type': 'application/json',
-            'X-Goog-Api-Key': os.environ["GOOGLE_API_KEY"],  # あなたのGoogle APIキー
+            'X-Goog-Api-Key': os.environ["GOOGLE_API_KEY"],
             'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.priceLevel',
-            'Accept-Language': 'ja'  # 日本語での結果を得るために追加
-
+            'Accept-Language': 'ja'
         }
 
-        # POSTリクエストを実行
         response = requests.post(url, headers=headers,
                                  data=json.dumps(payload))
-
-        # レスポンスのJSONを取得
         data = response.json()
+        if response.status_code != 200 or 'places' not in data:
+            raise Exception('Failed to get places')
         places = data['places']
-
         texts = [place['displayName']['text'] for place in places]
 
-        result = """ドライバーが眠くなっています。近くの休憩場所は{}です。紹介してあげてください。""".format(
-            texts[0])
-
-        # print(result)
+        result = {
+            'text': """ドライバーが眠くなっています。近くの休憩場所は{}です。紹介してあげてください。""".format(
+                texts[0]),
+            'place_id': self.get_placeid(texts[0])
+        }
 
         return result
 
-        # 検索結果がなかった場合の例外処理を入れておく必要がある
-# SearchSpot().search_spot()
+    def get_placeid(self, name):
+        url = 'https://places.googleapis.com/v1/places:searchText'
+        payload = {
+            "textQuery": name
+        }
+        headers = {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': os.environ["GOOGLE_API_KEY"],
+            'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress'
+        }
+        response = requests.post(url, headers=headers,
+                                 data=json.dumps(payload))
+        data = response.json()
+        if response.status_code != 200 or 'places' not in data:
+            raise Exception('Failed to get place id')
+        return data['places'][0]['id']
+
+
+# SearchSpot().search_spot(33.576924, 130.260898)
