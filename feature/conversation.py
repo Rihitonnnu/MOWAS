@@ -16,6 +16,7 @@ import beep
 import log_instance
 from token_record import TokenRecord
 from search_spot import SearchSpot
+import place_details
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
@@ -109,6 +110,7 @@ def conversation():
         # 利用者が初めて発話、それに対する応答
         # human_input = rec_unlimited.recording_to_text()
         human_input = input("You: ")
+
         logger.info(user_name + ": " + human_input)
         response = llm_chain.predict(
             human_input=human_input, summary=summary, introduce=introduce)
@@ -124,15 +126,21 @@ def conversation():
             with get_openai_callback() as cb:
                 # human_input = rec_unlimited.recording_to_text()
 
-                # ここで紹介するかしないのか判定が入る、あともう少しうまくかけるかも
                 introduce = """"""
                 human_input = input("You: ")
                 logger.info(user_name + ": " + human_input)
-                introduce = SearchSpot().search_spot()
-                # introduce = """休憩場所はローソン 九大学研都市駅前店もしくはファミリーマート ＪＲ九大学研都市駅店が近いです。紹介してあげてください。"""
+
+                if True:
+                    # スポット検索と案内
+                    spot_result = SearchSpot().search_spot(33.576924, 130.260898)
+
+                    # スポットの案内とメール送信
+                    place_details.place_details(spot_result['place_id'])
+
+                    # プロンプトで案内したことを伝える処理
 
                 response = llm_chain.predict(
-                    human_input=human_input, summary=summary, introduce=introduce)
+                    human_input=human_input, summary=summary, introduce=spot_result['introduce'])
 
                 token_record.token_record(cb, conv_cnt)
                 conv_cnt += 1
