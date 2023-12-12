@@ -59,14 +59,15 @@ class SearchSpot:
         places = data['places']
         texts = [place['displayName']['text'] for place in places]
 
-        result = {
-            'text': """ドライバーが眠くなっています。近くの休憩場所は{}です。紹介してあげてください。""".format(
+        spot_result = {
+            'introduce': """ドライバーが眠くなっています。近くの休憩場所は{}です。紹介してあげてください。""".format(
                 texts[0]),
             'place_id': self.get_placeid(texts[0])
         }
 
-        return result
+        return spot_result
 
+    # placeid取得
     def get_placeid(self, name):
         url = 'https://places.googleapis.com/v1/places:searchText'
         payload = {
