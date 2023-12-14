@@ -8,6 +8,8 @@ from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain.chat_models import ChatOpenAI
 from langchain.callbacks import get_openai_callback
+from langchain.embeddings import OpenAIEmbeddings
+# from openai.embeddings_utils import cosine_similarity
 from SyntheticVoice import SyntheticVoice
 from sql import Sql
 import rec_unlimited
@@ -158,6 +160,26 @@ def conversation():
             exit(1)
 
 
+def cosine_similarity(a, b):
+    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
+
+# def embedding(input):
+#     # 入力を複数にしてqueryを用意してコサイン類似度を用いて検索させる
+#     input_query = openai.Embedding.create(
+#         model='text-embedding-ada-002',
+#         input=input
+#     )
+
+#     target_query = openai.Embedding.create(
+#         model='text-embedding-ada-002',
+#         input='眠い'
+#     )
+#     result = cosine_similarity(
+#         target_query['data'][0]['embedding'], input_query['data'][0]['embedding'])
+#     print(result)
+
+
 def embedding(input):
     with open('json/index.json') as f:
         INDEX = json.load(f)
@@ -181,11 +203,7 @@ def embedding(input):
     # コサイン類似度で降順（大きい順）にソート
     results = sorted(results, key=lambda i: i['similarity'], reverse=True)
 
-    print(results)
+    # print(results)
 
     # 類似性の高い選択肢を出力
     print(f'一番近い文章は {results[0]["body"]} です')
-
-
-def cosine_similarity(a, b):
-    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
