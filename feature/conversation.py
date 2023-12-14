@@ -150,7 +150,6 @@ def conversation():
                     'AI: ', '').replace('もわす: ', ''))
                 exit(1)
         except KeyboardInterrupt:
-            # syntheticVoice.speaking("会話を終了しています。しばらくお待ち下さい ")
             summary = Gpt().make_conversation_summary()
             Sql().store_conversation_summary(summary)
             Sql().store_conversation()
