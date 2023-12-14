@@ -60,7 +60,12 @@ class SearchSpot:
         texts = [place['displayName']['text'] for place in places]
 
         spot_result = {
-            'introduce': """ドライバーが眠くなっています。近くの休憩場所は{}です。紹介してあげてください。""".format(
+            'introduce': """
+            ドライバーが眠くなっています。以下のように指示してドライバーを休憩場所へ誘導してください。
+
+            # 案内文言
+            近くの休憩場所は{}です。メールでマップのurlを送信しましたのでスマートフォンの案内に従って休憩場所に向かってください。
+            """.format(
                 texts[0]),
             'place_id': self.get_placeid(texts[0])
         }
@@ -84,6 +89,3 @@ class SearchSpot:
         if response.status_code != 200 or 'places' not in data:
             raise Exception('Failed to get place id')
         return data['places'][0]['id']
-
-
-# SearchSpot().search_spot(33.576924, 130.260898)

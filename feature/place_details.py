@@ -20,7 +20,7 @@ def place_details(place_id):
     }
 
     # GETリクエストを実行
-    response = requests.get('https://places.googleapis.com/v1/places/ChIJZx4pw5jrQTURaTr3uAUhpX4',
+    response = requests.get('https://places.googleapis.com/v1/places/{}'.format(place_id),
                             headers=headers)
 
     # レスポンスのJSONを取得

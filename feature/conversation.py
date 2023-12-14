@@ -136,11 +136,11 @@ def conversation():
 
                     # スポットの案内とメール送信
                     place_details.place_details(spot_result['place_id'])
-
-                    # プロンプトで案内したことを伝える処理
-
-                response = llm_chain.predict(
-                    human_input=human_input, summary=summary, introduce=spot_result['introduce'])
+                    response = llm_chain.predict(
+                        human_input=human_input, summary=summary, introduce=spot_result['introduce'])
+                else:
+                    response = llm_chain.predict(
+                        human_input=human_input, summary=summary, introduce=spot_result['introduce'])
 
                 token_record.token_record(cb, conv_cnt)
                 conv_cnt += 1
@@ -148,6 +148,7 @@ def conversation():
                 logger.info(response.replace('AI: ', ''))
                 syntheticVoice.speaking(response.replace(
                     'AI: ', '').replace('もわす: ', ''))
+                exit(1)
         except KeyboardInterrupt:
             # syntheticVoice.speaking("会話を終了しています。しばらくお待ち下さい ")
             summary = Gpt().make_conversation_summary()
