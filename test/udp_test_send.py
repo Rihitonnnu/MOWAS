@@ -1,4 +1,6 @@
 import socket
+import os
+from dotenv import load_dotenv
 
 
 def udp_client(message, server_ip, server_port):
@@ -6,4 +8,4 @@ def udp_client(message, server_ip, server_port):
     sock.sendto(message.encode(), (server_ip, server_port))
 
 
-udp_client("Hello, Server!", "192.168.11.26", 12345)
+udp_client("Hello, Server!", os.environ["SCHOOL_MACHINE_IP"], 12345)
