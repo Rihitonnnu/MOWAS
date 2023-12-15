@@ -206,4 +206,13 @@ def embedding(input):
     # print(results)
 
     # 類似性の高い選択肢を出力
-    print(f'一番近い文章は {results[0]["body"]} です')
+    sleepy_result = {
+        '眠い': 'sleepy',
+        '少し眠い': 'sleepy',
+        '眠くなりかけている': 'sleepy',
+        '眠くない': 'notsleepy',
+    }
+
+    # 現在眠いか眠くないかを出力
+    print(sleepy_result[results[0]["body"]])
+    # print(f'一番近い文章は {results[0]["body"]} です')
