@@ -1,11 +1,15 @@
 import os
 from dotenv import load_dotenv
 import openai
+import json
+import numpy as np
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain.chat_models import ChatOpenAI
 from langchain.callbacks import get_openai_callback
+from langchain.embeddings import OpenAIEmbeddings
+# from openai.embeddings_utils import cosine_similarity
 from SyntheticVoice import SyntheticVoice
 from sql import Sql
 import rec_unlimited
@@ -14,6 +18,9 @@ import beep
 import log_instance
 from token_record import TokenRecord
 from search_spot import SearchSpot
+import place_details
+
+openai.api_key = os.environ["OPENAI_API_KEY"]
 
 
 def conversation():
@@ -22,7 +29,6 @@ def conversation():
 
     # 環境変数読み込み
     load_dotenv()
-    openai.api_key = os.environ["OPENAI_API_KEY"]
 
     syntheticVoice = SyntheticVoice()
     token_record = TokenRecord()
@@ -106,6 +112,7 @@ def conversation():
         # 利用者が初めて発話、それに対する応答
         # human_input = rec_unlimited.recording_to_text()
         human_input = input("You: ")
+
         logger.info(user_name + ": " + human_input)
         response = llm_chain.predict(
             human_input=human_input, summary=summary, introduce=introduce)
@@ -121,15 +128,21 @@ def conversation():
             with get_openai_callback() as cb:
                 # human_input = rec_unlimited.recording_to_text()
 
-                # ここで紹介するかしないのか判定が入る、あともう少しうまくかけるかも
                 introduce = """"""
                 human_input = input("You: ")
                 logger.info(user_name + ": " + human_input)
-                introduce = SearchSpot().search_spot()
-                # introduce = """休憩場所はローソン 九大学研都市駅前店もしくはファミリーマート ＪＲ九大学研都市駅店が近いです。紹介してあげてください。"""
 
-                response = llm_chain.predict(
-                    human_input=human_input, summary=summary, introduce=introduce)
+                if True:
+                    # スポット検索と案内
+                    spot_result = SearchSpot().search_spot(33.576924, 130.260898)
+
+                    # スポットの案内とメール送信
+                    place_details.place_details(spot_result['place_id'])
+                    response = llm_chain.predict(
+                        human_input=human_input, summary=summary, introduce=spot_result['introduce'])
+                else:
+                    response = llm_chain.predict(
+                        human_input=human_input, summary=summary, introduce=spot_result['introduce'])
 
                 token_record.token_record(cb, conv_cnt)
                 conv_cnt += 1
@@ -137,11 +150,69 @@ def conversation():
                 logger.info(response.replace('AI: ', ''))
                 syntheticVoice.speaking(response.replace(
                     'AI: ', '').replace('もわす: ', ''))
+                exit(1)
         except KeyboardInterrupt:
-            # syntheticVoice.speaking("会話を終了しています。しばらくお待ち下さい ")
             summary = Gpt().make_conversation_summary()
             Sql().store_conversation_summary(summary)
             Sql().store_conversation()
 
             beep.high()
             exit(1)
+
+
+def cosine_similarity(a, b):
+    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
+
+# def embedding(input):
+#     # 入力を複数にしてqueryを用意してコサイン類似度を用いて検索させる
+#     input_query = openai.Embedding.create(
+#         model='text-embedding-ada-002',
+#         input=input
+#     )
+
+#     target_query = openai.Embedding.create(
+#         model='text-embedding-ada-002',
+#         input='眠い'
+#     )
+#     result = cosine_similarity(
+#         target_query['data'][0]['embedding'], input_query['data'][0]['embedding'])
+#     print(result)
+
+
+def embedding(input):
+    with open('json/index.json') as f:
+        INDEX = json.load(f)
+
+    # 入力を複数にしてqueryを用意してコサイン類似度を用いて検索させる
+    query = openai.Embedding.create(
+        model='text-embedding-ada-002',
+        input=input
+    )
+
+    query = query['data'][0]['embedding']
+
+    results = map(
+        lambda i: {
+            'body': i['body'],
+            # ここでクエリと各文章のコサイン類似度を計算
+            'similarity': cosine_similarity(i['embedding'], query)
+        },
+        INDEX
+    )
+    # コサイン類似度で降順（大きい順）にソート
+    results = sorted(results, key=lambda i: i['similarity'], reverse=True)
+
+    # print(results)
+
+    # 類似性の高い選択肢を出力
+    sleepy_result = {
+        '眠い': 'sleepy',
+        '少し眠い': 'sleepy',
+        '眠くなりかけている': 'sleepy',
+        '眠くない': 'notsleepy',
+    }
+
+    # 現在眠いか眠くないかを出力
+    print(sleepy_result[results[0]["body"]])
+    # print(f'一番近い文章は {results[0]["body"]} です')
