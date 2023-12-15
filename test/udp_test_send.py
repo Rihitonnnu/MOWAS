@@ -1,6 +1,7 @@
 import socket
 import os
 from dotenv import load_dotenv
+load_dotenv()
 
 
 def udp_client(message, server_ip, server_port):
