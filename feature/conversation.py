@@ -8,8 +8,6 @@ from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain.chat_models import ChatOpenAI
 from langchain.callbacks import get_openai_callback
-from langchain.embeddings import OpenAIEmbeddings
-# from openai.embeddings_utils import cosine_similarity
 from SyntheticVoice import SyntheticVoice
 from sql import Sql
 import rec_unlimited
@@ -67,8 +65,6 @@ def conversation():
         {chat_history}
         Human: {human_input}
         """
-    human_template = "{text}"
-
     prompt = PromptTemplate(
         input_variables=["chat_history", "summary", "human_input", "introduce"], template=template
     )
@@ -134,12 +130,28 @@ def conversation():
 
                 if True:
                     # スポット検索と案内
-                    spot_result = SearchSpot().search_spot(33.576924, 130.260898)
+                    spot_result = SearchSpot().search_spot(
+                        33.576924, 130.260898)
+                    spot_url = place_details.place_details(
+                        spot_result['place_id'])
 
-                    # スポットの案内とメール送信
-                    place_details.place_details(spot_result['place_id'])
+                    # スポットの案内の提案プロンプト
+                    introduce = """ドライバーが眠くなっています。以下のように指示してドライバーを休憩場所へ誘導してください。
+                                # 案内文言
+                                {}さん、眠くなっているんですね。近くの休憩場所は{}です。この目的地まで案内しましょうか？""".format(user_name, spot_result['display_name'])
                     response = llm_chain.predict(
-                        human_input=human_input, summary=summary, introduce=spot_result['introduce'])
+                        human_input=human_input, summary=summary, introduce=introduce)
+
+                    syntheticVoice.speaking(response.replace(
+                        'AI: ', '').replace('もわす: ', ''))
+
+                    # 入力を受け取る
+                    human_input = input("You: ")
+
+                    # 休憩所のurlをメールで送信
+                    place_details.send_email(spot_url)
+                    exit(1)
+
                 else:
                     response = llm_chain.predict(
                         human_input=human_input, summary=summary, introduce=spot_result['introduce'])
@@ -162,22 +174,6 @@ def conversation():
 
 def cosine_similarity(a, b):
     return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
-
-
-# def embedding(input):
-#     # 入力を複数にしてqueryを用意してコサイン類似度を用いて検索させる
-#     input_query = openai.Embedding.create(
-#         model='text-embedding-ada-002',
-#         input=input
-#     )
-
-#     target_query = openai.Embedding.create(
-#         model='text-embedding-ada-002',
-#         input='眠い'
-#     )
-#     result = cosine_similarity(
-#         target_query['data'][0]['embedding'], input_query['data'][0]['embedding'])
-#     print(result)
 
 
 def embedding(input):
