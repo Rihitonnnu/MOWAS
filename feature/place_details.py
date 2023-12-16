@@ -27,7 +27,8 @@ def place_details(place_id):
     data = response.json()
     # GoogleマップのURLを取得
     google_maps_url = data['googleMapsUri']
-    send_email(google_maps_url)
+
+    return google_maps_url
 
 
 def send_email(body):
