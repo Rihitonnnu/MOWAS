@@ -14,27 +14,21 @@ nltk.corpus.stopwords.words = lambda lang: stopwords if lang == 'japanese' else 
     lang)
 
 
-# Wikipedia カエルより引用
-# https://ja.wikipedia.org/wiki/%E3%82%AB%E3%82%A8%E3%83%AB
-# text = ("カエル（蛙、英語: Frog）は、両生綱無尾目（むびもく、Anura）に分類される構成種の総称。古称としてかわず（旧かな表記では「かはづ」）などがある。英名は一般にはfrogであるが，ヒキガエルのような外観のものをtoadと呼ぶことが多い。"
-#         "成体の頭は三角形で、目は上に飛び出している。一見すると頭部には種による差異がないようにも思えるが、実際には天敵対策のために毒液を流し込む鋭い棘を発達させた種や、大きめの獲物を飲み込めるように大きく裂けた顎を持つ種など、種ごとの違いが大きい。中には頭部をヘルメットのように活用して巣穴に蓋をする種もいる。極わずかの例外を除き、上顎にしか歯が生えていない。が歯が無い種類でも、牙状の突起を進化させたものが少なくない[3]。獲物を飲み込む際には、目玉を引っ込めて強制的に喉の奥へ押し込む。"
-#         "胴体は丸っこく、尻尾は幼体にしか存在しない。ほとんどの種で肋骨がない。"
-#         "後肢が特に発達しており、後肢でジャンプすることで、敵から逃げたり、エサを捕まえたりする。後肢の指の間に水掻きが発達するものが多く、これを使ってよく泳ぐ。"
-#         "前肢は人間の腕に似た形状をしている。ジャンプからの着地の際に身体への衝撃を和らげるのが主な役目である。餌となる小動物に飛びついて両肢で押さえつけたり、冬眠などのために土砂を掘ったり、汚れ落としのために片肢で顔を拭いたりする動作も可能である。アオガエル科やアマガエル科などの樹上生活をする種の多くでは指先に吸盤が発達し、その補助で細い枝などに掴まることができる。人間や猿のように物を片肢ないし両肢で掴み取ることはできない。"
-#         "幼生は四肢がなく、ひれのついた尾をもつ。成体とは違う姿をしていて、俗に「オタマジャクシ（お玉杓子）」と呼ばれる（食器のお玉杓子に似た形状から）。オタマジャクシはえら呼吸を行い、尾を使って泳ぐため、淡水中でないと生きることができない。オタマジャクシは変態することで、尾をもたず肺呼吸する、四肢をもった幼体（仔ガエル）となる。"
-#         )
+def key_extraction(text):
+    # extractor = pke.unsupervised.TopicRank()
+    extractor = pke.unsupervised.MultipartiteRank()
+    # normalization=None を指定しないと，デフォルトの Stemming 処理が走りそれが日本語未対応のためエラーになる
+    extractor.load_document(input=text, language='ja', normalization=None)
 
-text = ("最近は色々なことに取り組んでいます。特に楽しいのはフットサルやサイクリング、音楽鑑賞が好きです。"
-        "その中でもフットサルが一番好きです")
+    extractor.candidate_selection(pos={'NOUN', 'PROPN', 'ADJ', 'NUM'})
+    extractor.candidate_weighting(threshold=0.74, method='average', alpha=1.1)
 
-extractor = pke.unsupervised.MultipartiteRank()
+    keyphrases = extractor.get_n_best(n=10)
 
-# normalization=None を指定しないと，デフォルトの Stemming 処理が走りそれが日本語未対応のためエラーになる
-extractor.load_document(input=text, language='ja', normalization=None)
+    print(keyphrases)
 
-extractor.candidate_selection(pos={'NOUN', 'PROPN', 'ADJ', 'NUM'})
-extractor.candidate_weighting()
 
-keyphrases = extractor.get_n_best(n=10)
-
-print(keyphrases)
+key_extraction("""人工知能という名前は1956年にダートマス会議でジョン・マッカーシーにより命名された。
+現在では、記号処理を用いた知能の記述を主体とする情報処理や研究でのアプローチという意味あいでも使われている。
+日常語としての「人工知能」という呼び名は非常に曖昧なものになっており、多少気の利いた家庭用電気機械器具の制御システムやゲームソフトの思考ルーチンなどがこう呼ばれることもある。""")
+# key_extraction("投資はしたい。つみたてNISAはどのようなものなのか。節約もしてて自炊もよくしているんですよ。")
