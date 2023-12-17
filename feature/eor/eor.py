@@ -19,6 +19,11 @@ frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 print(f'frame_width: {frame_width}')
 print(f'frame_height: {frame_height}')
 
+# カメラの解像度を設定
+# cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+# cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
+
 try:
     while cap.isOpened():
         ret, frame = cap.read()
@@ -36,10 +41,12 @@ try:
             for face_landmarks in results.multi_face_landmarks:
                 h, w, c = frame.shape
                 for id, lm in enumerate(face_landmarks.landmark):
-                    # 目のランドマークのIDは33から145まで
-                    if 33 <= id <= 145:
-                        x, y = int(lm.x * w), int(lm.y * h)
-                        cv2.circle(frame, (x, y), 2, (0, 255, 0), -1)
+                    # 上まぶたと下まぶたのランドマークを描画する
+                    if id in [159, 145, 386, 374]:
+                        cx, cy = int(lm.x * w), int(lm.y * h)
+                        # 線で描画する
+                        cv2.line(frame, (cx - 20, cy),
+                                 (cx + 20, cy), (0, 255, 0), 1)
 
                 # 左目の上まぶたと下まぶたの距離を計算する
                 left_eye_top = np.array(
