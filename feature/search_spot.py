@@ -2,6 +2,7 @@ import requests
 import json
 import os
 from dotenv import load_dotenv
+from sql import Sql
 
 load_dotenv()
 
@@ -57,20 +58,22 @@ class SearchSpot:
         if response.status_code != 200 or 'places' not in data:
             raise Exception('Failed to get places')
         places = data['places']
-        texts = [place['displayName']['text'] for place in places]
+        display_names = [place['displayName']['text'] for place in places]
 
-        spot_result = {
-            'introduce': """
-            ドライバーが眠くなっています。以下のように指示してドライバーを休憩場所へ誘導してください。
+        # spot_result = {
+        #     'introduce': """
+        #     ドライバーが眠くなっています。以下のように指示してドライバーを休憩場所へ誘導してください。
 
-            # 案内文言
-            近くの休憩場所は{}です。メールでマップのurlを送信しましたのでスマートフォンの案内に従って休憩場所に向かってください。
-            """.format(
-                texts[0]),
-            'place_id': self.get_placeid(texts[0])
+        #     # 案内文言
+        #     {}さん、眠くなっているんですね。近くの休憩場所は{}です。この目的地まで案内しましょうか？
+        #     """.format(
+        #         self.user_name, display_names[0]),
+        #     'place_id': self.get_placeid(display_names[0])
+        # }
+        return {
+            'display_name': display_names[0],
+            'place_id': self.get_placeid(display_names[0])
         }
-
-        return spot_result
 
     # placeid取得
     def get_placeid(self, name):

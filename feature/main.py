@@ -2,7 +2,6 @@
 import conversation
 import os
 import view.option_window
-view.option_window
 
 try:
     os.mkdir('../sound')
