@@ -2,15 +2,15 @@ import cv2
 import mediapipe as mp
 import numpy as np
 
-# Initialize MediaPipe's FaceMesh model
+# MediaPipeのFaceMeshモデルを初期化する
 mp_face_mesh = mp.solutions.face_mesh
 face_mesh = mp_face_mesh.FaceMesh()
 
-# Initialize MediaPipe's DrawingSpec (drawing settings)
+# MediaPipeのDrawingSpec（描画設定）を初期化する
 mp_drawing = mp.solutions.drawing_utils
 drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)
 
-# Open the camera
+# カメラを開く
 cap = cv2.VideoCapture(0)
 
 # 現在のカメラの解像度を取得
@@ -25,23 +25,23 @@ try:
         if not ret:
             continue
 
-        # Convert BGR image to RGB
+        # BGR画像をRGBに変換する
         rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        # Detect face landmarks
+        # 顔のランドマークを検出する
         results = face_mesh.process(rgb_image)
 
-        # Draw the detected landmarks and calculate eyelid distances
+        # 検出されたランドマークを描画し、まぶたの距離を計算する
         if results.multi_face_landmarks:
             for face_landmarks in results.multi_face_landmarks:
                 h, w, c = frame.shape
                 for id, lm in enumerate(face_landmarks.landmark):
-                    # Eye landmarks have IDs from 33 to 145
+                    # 目のランドマークのIDは33から145まで
                     if 33 <= id <= 145:
                         x, y = int(lm.x * w), int(lm.y * h)
                         cv2.circle(frame, (x, y), 2, (0, 255, 0), -1)
 
-                # Calculate the distance between upper and lower eyelids for left eye
+                # 左目の上まぶたと下まぶたの距離を計算する
                 left_eye_top = np.array(
                     [face_landmarks.landmark[159].x * w, face_landmarks.landmark[159].y * h])
                 left_eye_bottom = np.array(
@@ -49,7 +49,7 @@ try:
                 left_eye_distance = np.linalg.norm(
                     left_eye_top - left_eye_bottom)
 
-                # Calculate the distance between upper and lower eyelids for right eye
+                # 右目の上まぶたと下まぶたの距離を計算する
                 right_eye_top = np.array(
                     [face_landmarks.landmark[386].x * w, face_landmarks.landmark[386].y * h])
                 right_eye_bottom = np.array(
@@ -57,23 +57,23 @@ try:
                 right_eye_distance = np.linalg.norm(
                     right_eye_top - right_eye_bottom)
 
-                # Display the distances on the frame
-                cv2.putText(frame, f"Left eye distance: {left_eye_distance}", (
+                # フレーム上に距離を表示する
+                cv2.putText(frame, f"左目の距離: {left_eye_distance}", (
                     10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-                cv2.putText(frame, f"Right eye distance: {right_eye_distance}", (
+                cv2.putText(frame, f"右目の距離: {right_eye_distance}", (
                     10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
-        # Display the image
+        # 画像を表示する
         cv2.imshow('MediaPipe FaceMesh', frame)
 
-        # Exit the loop when 'q' key is pressed
+        # 'q'キーが押されたらループを終了する
         if cv2.waitKey(5) & 0xFF == ord('q'):
             break
 
 except Exception as e:
-    print(f"An error occurred: {str(e)}")
+    print(f"エラーが発生しました: {str(e)}")
 
 finally:
-    # Release the camera and destroy OpenCV windows
+    # カメラを解放し、OpenCVのウィンドウを閉じる
     cap.release()
     cv2.destroyAllWindows()
