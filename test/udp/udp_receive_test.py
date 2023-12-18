@@ -1,5 +1,6 @@
 import socket
 import time
+import struct
 
 # 自分のPCのアドレスとport.
 host = '127.0.0.1'
@@ -17,9 +18,14 @@ while True:
     try :
         # 受付待ち
         print('Waiting message')
-        message, cli_addr = sock.recvfrom(1024)
-        message = message.decode(encoding='utf-8')
-        print(f'Received message is [{message}]')
+        data, cli_addr = sock.recvfrom(1024)
+
+        coordinates_result=[]
+        for i in range(0, len(data), 8):
+            num = struct.unpack('d', data[i:i+8])[0]
+            coordinates_result.append(num)
+        
+        print('Received message: {}'.format(coordinates_result))
 
         # Clientが受信待ちになるまで待つため
         time.sleep(1)
