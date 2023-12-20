@@ -17,7 +17,7 @@ sock.bind(locaddr)
 while True:
     try :
         # 受付待ち
-        print('Waiting message')
+        print('Waiting data...')
         data, cli_addr = sock.recvfrom(1024)
 
         coordinates_result=[]
@@ -25,15 +25,7 @@ while True:
             num = struct.unpack('d', data[i:i+8])[0]
             coordinates_result.append(num)
         
-        print('Received message: {}'.format(coordinates_result))
-
-        # Clientが受信待ちになるまで待つため
-        time.sleep(1)
-
-        # Clientへ受信完了messageを送信
-        message = input()
-        sock.sendto(message.encode(encoding='utf-8'), cli_addr)
-        print('Send response to Client')
+        print('Received data: {}'.format(coordinates_result))
     except KeyboardInterrupt:
         print ('\\n . . .\\n')
         sock.close()
