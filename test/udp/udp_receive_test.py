@@ -1,5 +1,4 @@
 import socket
-import time
 import struct
 
 # 自分のPCのアドレスとport.
