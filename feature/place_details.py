@@ -3,7 +3,6 @@ from email.utils import formatdate
 from email.mime.text import MIMEText
 import requests
 import os
-import webbrowser
 
 from dotenv import load_dotenv
 
