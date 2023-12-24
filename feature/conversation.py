@@ -73,8 +73,6 @@ def conversation():
     memory = ConversationBufferWindowMemory(
         k=3, memory_key="chat_history", input_key="human_input")
 
-    # memory = ConversationBufferMemory(
-    #     memory_key="chat_history", input_key="human_input")
 
     llm = ChatOpenAI(temperature=0.7)
     llm_chain = LLMChain(
