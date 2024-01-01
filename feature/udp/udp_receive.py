@@ -10,7 +10,7 @@ class UDPReceive():
         self.sock.bind(self.locaddr)
         print('create socket')
 
-    def get_eor(self):
+    def is_sleepy(self):
         try :
             # 受付待ち
             print('Waiting data...')
@@ -45,5 +45,4 @@ class UDPReceive():
     def close(self):
         self.sock.close()
 
-UDPReceive('127.0.0.1',2002).get_eor()
 # UDPReceive('127.0.0.1',2002).get_coordinates()
