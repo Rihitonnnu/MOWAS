@@ -21,5 +21,4 @@ while True:
     if is_sleepy:
         break
 
-exit(1)
 conversation.conversation()
