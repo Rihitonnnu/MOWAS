@@ -131,7 +131,6 @@ class Conversation():
         with get_openai_callback() as cb:
             # 利用者が初めて発話、それに対する応答
             human_input = rec_unlimited.recording_to_text(self.reaction_time_sheet_path)
-            exit(1)
             # human_input = input("You: ")
             self.introduce(human_input)
 
