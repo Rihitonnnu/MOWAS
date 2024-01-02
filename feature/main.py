@@ -1,5 +1,5 @@
 
-import conversation
+from conversation import Conversation
 import os
 import view.option_window
 import udp.udp_receive
@@ -14,11 +14,11 @@ try:
 except FileExistsError:
     pass
 
-# 眠くなりかけるまで待機
-while True:
-    is_sleepy=udp.udp_receive.UDPReceive('127.0.0.1',2002).is_sleepy()
+# # 眠くなりかけるまで待機
+# while True:
+#     is_sleepy=udp.udp_receive.UDPReceive('127.0.0.1',2002).is_sleepy()
 
-    if is_sleepy:
-        break
+#     if is_sleepy:
+#         break
 
-conversation.conversation()
+Conversation().run()
