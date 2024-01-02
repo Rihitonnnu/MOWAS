@@ -20,194 +20,212 @@ import place_details
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
-def introduce(user_name,flag):
-    if not flag:
-        # 関数終了
-        return
-    
-    spot_result = SearchSpot().search_spot(
-    33.576924, 130.260898)
-    spot_url = place_details.place_details(
-        spot_result['place_id'])
+# conversation()をclassにする
+class Conversation():
+    def __init__(self):
+        self.introduce_prompt = """"""
+        self.user_name=Sql().select('''
+                        SELECT  name 
+                        FROM    users
+                        ''')
+        self.syntheticVoice = SyntheticVoice()
+        self.token_record = TokenRecord()
 
-    # スポットの案内の提案プロンプト
-    introduce = """ドライバーが眠くなっています。以下のように指示してドライバーを休憩場所へ誘導してください。
-                # 案内文言
-                {}さん、眠くなっているんですね。近くの休憩場所は{}です。この目的地まで案内しましょうか？""".format(user_name, spot_result['display_name'])
+    def introduce(self,human_input):
+        # 眠くない場合は案内を行わない
+        if not self.embedding(human_input.replace('You:','')):
+            # 関数終了
+            return
+        
+        spot_result = SearchSpot().search_spot(
+        33.576924, 130.260898)
+        spot_url = place_details.place_details(
+            spot_result['place_id'])
+
+        # スポットの案内の提案プロンプト
+        self.introduce_prompt = """ドライバーが眠くなっています。以下のように指示してドライバーを休憩場所へ誘導してください。
+                    # 案内文言
+                    {}さん、眠くなっているんですね。近くの休憩場所は{}です。この目的地まで案内しましょうか？""".format(self.user_name, spot_result['display_name'])
+        
+        response = llm_chain.predict(
+                            human_input=human_input,  introduce_prompt=self.introduce_prompt)
+
+        self.syntheticVoice.speaking(response.replace(
+            'AI: ', '').replace('もわす: ', ''))
+        # 入力を受け取る
+
+        # ここでembeddingを用いて眠いか眠くないかを判定
+        # self.embedding(human_input)
+
+        # 休憩所のurlをメールで送信
+        place_details.send_email(spot_url)
 
 
-def conversation():
-    # ログの設定
-    logger = log_instance.log_instance('conversation')
+    def run(self):
+        # ログの設定
+        logger = log_instance.log_instance('conversation')
 
-    # 環境変数読み込み
-    load_dotenv()
+        # 環境変数読み込み
+        load_dotenv()
 
-    syntheticVoice = SyntheticVoice()
-    token_record = TokenRecord()
+        # SQLクエリ設定
+        summary = Sql().select('''
+                        SELECT  summary 
+                        FROM    users
+                        ''')
 
-    # SQLクエリ設定
-    user_name = Sql().select('''
-                    SELECT  name 
-                    FROM    users
-                    ''')
-    summary = Sql().select('''
-                    SELECT  summary 
-                    FROM    users
-                    ''')
-    introduce = """"""
-
-    # テンプレート,プロンプトの設定
-    if user_name != None:
+        # テンプレート,プロンプトの設定
         template = """あなたは相手と会話をすることで覚醒維持するシステムで名前はもわすです。
         # 条件
-        - 「会話を行いながら覚醒維持を行います」、「眠くなった場合は私に眠いと伝えてください」と伝える
         - 相手の興味のある話題で会話をする
 
         {chat_history}
-        {introduce}
+        {introduce_prompt}
         Human: {human_input}
         """
-    
-    prompt = PromptTemplate(
-        input_variables=["chat_history", "human_input", "introduce"], template=template
-    )
+        
+        prompt = PromptTemplate(
+            input_variables=["chat_history", "human_input", "introduce_prompt"], template=template
+        )
 
-    # 記憶するmemoryの設定
-    memory = ConversationBufferWindowMemory(
-        k=3, memory_key="chat_history", input_key="human_input")
+        # 記憶するmemoryの設定
+        memory = ConversationBufferWindowMemory(
+            k=3, memory_key="chat_history", input_key="human_input")
 
+        llm_chain = LLMChain(
+            llm=ChatOpenAI(temperature=0),
+            prompt=prompt,
+            memory=memory,
+            verbose=False
+        )
 
-    llm = ChatOpenAI(temperature=0.7)
-    llm_chain = LLMChain(
-        llm=llm,
-        prompt=prompt,
-        memory=memory,
-        verbose=False
-    )
+        with get_openai_callback() as cb:
+            # 会話回数を初期化
+            conv_cnt = 1
 
-    with get_openai_callback() as cb:
-        # 会話回数を初期化
-        conv_cnt = 1
+            # 事前に入力をしておくことでMOWAS側からの応答から会話が始まる
+            # 分岐はドライバーの名前が入力されているかどうか
+            if self.user_name != None:
+                response = llm_chain.predict(
+                    human_input="こんにちは。あなたの名前は何ですか？私の名前は{}です。".format(self.user_name),  introduce_prompt=self.introduce_prompt)
+            self.syntheticVoice.speaking(response.replace(
+                'Mowasu: ', '').replace('もわす: ', ''))
+            print(response.replace('AI: ', ''))
 
-        # 事前に入力をしておくことでMOWAS側からの応答から会話が始まる
-        # 分岐はドライバーの名前が入力されているかどうか
-        if user_name != None:
+            # トークンをexcelに記録
+            self.token_record.token_record(cb, conv_cnt)
+            conv_cnt += 1
+
+        with get_openai_callback() as cb:
+            # 利用者が初めて発話、それに対する応答
+            # human_input = rec_unlimited.recording_to_text()
+            human_input = input("You: ")
+            self.introduce(human_input)
+            
+            print(human_input.replace('You:',''))
+
+            logger.info(self.user_name + ": " + human_input)
             response = llm_chain.predict(
-                human_input="こんにちは。あなたの名前は何ですか？私の名前は{}です。".format(user_name),  introduce=introduce)
-        syntheticVoice.speaking(response.replace(
-            'AI: ', '').replace('もわす: ', ''))
-        print(response.replace('AI: ', ''))
+                human_input=human_input, introduce_prompt=self.introduce_prompt)
+            logger.info(response.replace('AI: ', ''))
 
-        # トークンをexcelに記録
-        token_record.token_record(cb, conv_cnt)
-        conv_cnt += 1
+            self.syntheticVoice.speaking(response.replace(
+                'AI: ', '').replace('もわす: ', ''))
 
-    with get_openai_callback() as cb:
-        # 利用者が初めて発話、それに対する応答
-        # human_input = rec_unlimited.recording_to_text()
-        human_input = input("You: ")
+            self.token_record.token_record(cb, conv_cnt)
+            conv_cnt += 1
 
-        logger.info(user_name + ": " + human_input)
-        response = llm_chain.predict(
-            human_input=human_input, introduce=introduce)
-        logger.info(response.replace('AI: ', ''))
-        syntheticVoice.speaking(response.replace(
-            'AI: ', '').replace('もわす: ', ''))
+        while True:
+            try:
+                with get_openai_callback() as cb:
+                    # human_input = rec_unlimited.recording_to_text()
 
-        token_record.token_record(cb, conv_cnt)
-        conv_cnt += 1
+                    introduce = """"""
+                    human_input = input("You: ")
+                    logger.info(user_name + ": " + human_input)
 
-    while True:
-        try:
-            with get_openai_callback() as cb:
-                # human_input = rec_unlimited.recording_to_text()
+                    if True:
+                        # スポット検索と案内
+                        spot_result = SearchSpot().search_spot(
+                            33.576924, 130.260898)
+                        spot_url = place_details.place_details(
+                            spot_result['place_id'])
 
-                introduce = """"""
-                human_input = input("You: ")
-                logger.info(user_name + ": " + human_input)
+                        # スポットの案内の提案プロンプト
+                        introduce = """ドライバーが眠くなっています。以下のように指示してドライバーを休憩場所へ誘導してください。
+                                    # 案内文言
+                                    {}さん、眠くなっているんですね。近くの休憩場所は{}です。この目的地まで案内しましょうか？""".format(user_name, spot_result['display_name'])
+                        response = llm_chain.predict(
+                            human_input=human_input,  introduce=introduce)
 
-                if True:
-                    # スポット検索と案内
-                    spot_result = SearchSpot().search_spot(
-                        33.576924, 130.260898)
-                    spot_url = place_details.place_details(
-                        spot_result['place_id'])
+                        syntheticVoice.speaking(response.replace(
+                            'AI: ', '').replace('もわす: ', ''))
 
-                    # スポットの案内の提案プロンプト
-                    introduce = """ドライバーが眠くなっています。以下のように指示してドライバーを休憩場所へ誘導してください。
-                                # 案内文言
-                                {}さん、眠くなっているんですね。近くの休憩場所は{}です。この目的地まで案内しましょうか？""".format(user_name, spot_result['display_name'])
-                    response = llm_chain.predict(
-                        human_input=human_input,  introduce=introduce)
+                        # 入力を受け取る
+                        human_input = input("You: ")
 
+                        # 休憩所のurlをメールで送信
+                        place_details.send_email(spot_url)
+                        exit(1)
+
+                    else:
+                        response = llm_chain.predict(
+                            human_input=human_input, summary=summary, introduce=spot_result['introduce'])
+
+                    token_record.token_record(cb, conv_cnt)
+                    conv_cnt += 1
+
+                    logger.info(response.replace('AI: ', ''))
                     syntheticVoice.speaking(response.replace(
                         'AI: ', '').replace('もわす: ', ''))
-
-                    # 入力を受け取る
-                    human_input = input("You: ")
-
-                    # 休憩所のurlをメールで送信
-                    place_details.send_email(spot_url)
                     exit(1)
+            except KeyboardInterrupt:
+                # summary = Gpt().make_conversation_summary()
+                # Sql().store_conversation_summary(summary)
+                # Sql().store_conversation()
 
-                else:
-                    response = llm_chain.predict(
-                        human_input=human_input, summary=summary, introduce=spot_result['introduce'])
-
-                token_record.token_record(cb, conv_cnt)
-                conv_cnt += 1
-
-                logger.info(response.replace('AI: ', ''))
-                syntheticVoice.speaking(response.replace(
-                    'AI: ', '').replace('もわす: ', ''))
+                beep.high()
                 exit(1)
-        except KeyboardInterrupt:
-            # summary = Gpt().make_conversation_summary()
-            # Sql().store_conversation_summary(summary)
-            # Sql().store_conversation()
-
-            beep.high()
-            exit(1)
 
 
-def cosine_similarity(a, b):
-    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+    def cosine_similarity(self,a, b):
+        return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
 
-def embedding(input):
-    with open('json/index.json') as f:
-        INDEX = json.load(f)
+    def embedding(self,input):
+        with open('json/index.json') as f:
+            INDEX = json.load(f)
 
-    # 入力を複数にしてqueryを用意してコサイン類似度を用いて検索させる
-    query = openai.Embedding.create(
-        model='text-embedding-ada-002',
-        input=input
-    )
+        # 入力を複数にしてqueryを用意してコサイン類似度を用いて検索させる
+        query = openai.Embedding.create(
+            model='text-embedding-ada-002',
+            input=input
+        )
 
-    query = query['data'][0]['embedding']
+        query = query['data'][0]['embedding']
 
-    results = map(
-        lambda i: {
-            'body': i['body'],
-            # ここでクエリと各文章のコサイン類似度を計算
-            'similarity': cosine_similarity(i['embedding'], query)
-        },
-        INDEX
-    )
-    # コサイン類似度で降順（大きい順）にソート
-    results = sorted(results, key=lambda i: i['similarity'], reverse=True)
+        results = map(
+            lambda i: {
+                'body': i['body'],
+                # ここでクエリと各文章のコサイン類似度を計算
+                'similarity': self.cosine_similarity(i['embedding'], query)
+            },
+            INDEX
+        )
+        # コサイン類似度で降順（大きい順）にソート
+        results = sorted(results, key=lambda i: i['similarity'], reverse=True)
 
-    # print(results)
-
-    # 類似性の高い選択肢を出力
-    sleepy_result = {
-        '眠い': 'sleepy',
-        '少し眠い': 'sleepy',
-        '眠くなりかけている': 'sleepy',
-        '眠くない': 'notsleepy',
-    }
-
-    # 現在眠いか眠くないかを出力
-    print(sleepy_result[results[0]["body"]])
-    # print(f'一番近い文章は {results[0]["body"]} です')
+        # 類似性の高い選択肢を出力
+        sleepy_result = {
+            '眠い': 'sleepy',
+            '少し眠い': 'sleepy',
+            '眠くなりかけている': 'sleepy',
+            '眠くない': 'notsleepy',
+        }
+        
+        # sleepyであればTrue、notsleepyであればFalseを返す
+        if sleepy_result[results[0]["body"]] == 'sleepy':
+            return True
+        else:
+            return False
+        # print(f'一番近い文章は {results[0]["body"]} です')
