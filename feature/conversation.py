@@ -20,6 +20,21 @@ import place_details
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
+def introduce(user_name,flag):
+    if not flag:
+        # 関数終了
+        return
+    
+    spot_result = SearchSpot().search_spot(
+    33.576924, 130.260898)
+    spot_url = place_details.place_details(
+        spot_result['place_id'])
+
+    # スポットの案内の提案プロンプト
+    introduce = """ドライバーが眠くなっています。以下のように指示してドライバーを休憩場所へ誘導してください。
+                # 案内文言
+                {}さん、眠くなっているんですね。近くの休憩場所は{}です。この目的地まで案内しましょうか？""".format(user_name, spot_result['display_name'])
+
 
 def conversation():
     # ログの設定
@@ -80,9 +95,6 @@ def conversation():
         if user_name != None:
             response = llm_chain.predict(
                 human_input="こんにちは。あなたの名前は何ですか？私の名前は{}です。".format(user_name),  introduce=introduce)
-        else:
-            response = llm_chain.predict(
-                human_input="こんにちは。あなたの名前はなんですか？名前の登録をしたいです")
         syntheticVoice.speaking(response.replace(
             'AI: ', '').replace('もわす: ', ''))
         print(response.replace('AI: ', ''))
