@@ -15,6 +15,7 @@ import logging
 import time as pf_time
 import os
 import beep
+import openpyxl
 
 import sounddevice as sd
 import soundfile as sf
@@ -42,6 +43,7 @@ try:
     os.mkdir('../sound/{}'.format(datetime.datetime.now().strftime('%Y%m%d')))
 except FileExistsError:
     pass
+
 
 
 def int_or_str(text):
@@ -95,7 +97,7 @@ def callback(indata, frames, time, status):
         end = pf_time.perf_counter()
 
 
-def recording_to_text():
+def recording_to_text(reaction_time_sheet_path):
     try:
         if args.samplerate is None:
             device_info = sd.query_devices(args.device, 'input')
@@ -125,7 +127,19 @@ def recording_to_text():
         beep.low()
         print(end)
         print(start)
-        logger.info('Reaction time is {}'.format(end-start))
+
+        # excelシートを読み込む
+        wb = openpyxl.load_workbook(reaction_time_sheet_path)
+        sheet = wb.active
+        # 最終行を取得
+        last_row = sheet.max_row
+        # 最終行に書き込む
+        sheet.cell(row=last_row + 1, column=1, value=end-start)
+        # 保存
+        wb.save(reaction_time_sheet_path)
+
+        # logger.info('Reaction time is {}'.format(end-start))
+        
         print('\nRecording finished: ' + repr(args.filename))
         text = speechRecognitionGoogle.speech_recognition(args.filename)
         return text

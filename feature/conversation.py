@@ -22,7 +22,8 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 
 # conversation()をclassにする
 class Conversation():
-    def __init__(self):
+    def __init__(self,reaction_time_sheet_path):
+        self.reaction_time_sheet_path=reaction_time_sheet_path
         # jsonのパスを設定
         self.sleepy_json_path='json/embedding/is_sleepy.json'
         self.introduce_reaction_json_path='json/embedding/introduce_reaction.json'
@@ -129,8 +130,9 @@ class Conversation():
 
         with get_openai_callback() as cb:
             # 利用者が初めて発話、それに対する応答
-            # human_input = rec_unlimited.recording_to_text()
-            human_input = input("You: ")
+            human_input = rec_unlimited.recording_to_text(self.reaction_time_sheet_path)
+            exit(1)
+            # human_input = input("You: ")
             self.introduce(human_input)
 
             logger.info(self.user_name + ": " + human_input)
