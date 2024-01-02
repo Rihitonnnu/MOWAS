@@ -23,6 +23,10 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 # conversation()をclassにする
 class Conversation():
     def __init__(self):
+        # jsonのパスを設定
+        self.sleepy_json_path='json/embedding/index.json'
+        self.introduce_reaction_json_path='json/embedding/introduce_reaction.json'
+
         self.introduce_prompt = """"""
         self.user_name=Sql().select('''
                         SELECT  name 
@@ -168,8 +172,8 @@ class Conversation():
         return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
     # 入力を複数にしてqueryを用意してコサイン類似度を用いて検索させる
-    def embedding(self,input):
-        with open('json/index.json') as f:
+    def embedding(self,json_path,input):
+        with open(json_path) as f:
             INDEX = json.load(f)
 
         # 入力を複数にしてqueryを用意してコサイン類似度を用いて検索させる
@@ -192,15 +196,23 @@ class Conversation():
         results = sorted(results, key=lambda i: i['similarity'], reverse=True)
 
         # 類似性の高い選択肢を出力
-        sleepy_result = {
-            '眠い': 'sleepy',
-            '少し眠い': 'sleepy',
-            '眠くなりかけている': 'sleepy',
-            '眠くない': 'notsleepy',
-        }
+        if json_path==self.sleepy_json_path:
+            result = {
+                '眠い': True,
+                '少し眠い': True,
+                '眠くなりかけている': True,
+                '眠くない': False,
+            }
         
-        # sleepyであればTrue、notsleepyであればFalseを返す
-        if sleepy_result[results[0]["body"]] == 'sleepy':
-            return True
-        else:
-            return False
+        if json_path==self.introduce_reaction_json_path:
+            result = {
+                'はい': True,
+                'してください': True,
+                'お願いします': True,
+                'いいえ': False,
+                'しないでください': False,
+                '大丈夫です': False,
+            }
+        
+        # 眠ければTrue、眠くなければFalseを返す
+        return result[results[0]["body"]]
