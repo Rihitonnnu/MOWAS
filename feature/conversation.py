@@ -46,8 +46,8 @@ def conversation():
     if user_name != None:
         template = """あなたは相手と会話をすることで覚醒を維持するシステムであり、名前はもわすです。
         # 条件
+        - 「会話を行いながら覚醒維持を行います」と伝える
         - 相手の興味のある話題で会話をする
-        - 最初はどのような話題でお話しますか？と問いかけをする
         
         以下が会話の要約内容です。参考にしてください
         {summary}
@@ -56,15 +56,7 @@ def conversation():
         {introduce}
         Human: {human_input}
         """
-
-    if user_name == None:
-        template = """あなたはドライバーの覚醒を維持するシステムであり、名前はもわすです。自分の名前を呼ぶときはもわすと呼んでください。
-        また以下が前回の会話の要約内容です。会話を進める上での参考にしてください。
-        {summary}
-        
-        {chat_history}
-        Human: {human_input}
-        """
+    
     prompt = PromptTemplate(
         input_variables=["chat_history", "summary", "human_input", "introduce"], template=template
     )
