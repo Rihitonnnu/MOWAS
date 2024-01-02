@@ -44,5 +44,3 @@ class UDPReceive():
 
     def close(self):
         self.sock.close()
-
-# UDPReceive('127.0.0.1',2002).get_coordinates()
