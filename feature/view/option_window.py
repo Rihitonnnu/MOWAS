@@ -13,7 +13,7 @@ def make_main_window():
     main_layout = [[sg.Text("こんにちは、{}さん。操作を選択してください".format(user_name), size=(60, 1))],
                    [sg.Button('名前の更新', button_color=(
                     sg.YELLOWS[0], sg.BLUES[0]), bind_return_key=True, size=(80, 3))],
-                   [sg.Button('MOWASとの会話を開始する', button_color=(sg.YELLOWS[0], sg.GREENS[0]), size=(80, 3))]]
+                   [sg.Button('運転を開始する', button_color=(sg.YELLOWS[0], sg.GREENS[0]), size=(80, 3))]]
 
     return sg.Window('MOWAS', main_layout, font=('Helvetica', ' 13'),
                      default_button_element_size=(8, 2), use_default_focus=False)
@@ -53,7 +53,7 @@ while True:     # The Event Loop
     if event == "戻る":
         window.close()
         window = make_main_window()
-    if event == "MOWASとの会話を開始する":
+    if event == "運転を開始する":
         window.close()
     if event == 'SEND':
         query = values['-QUERY-'].rstrip()

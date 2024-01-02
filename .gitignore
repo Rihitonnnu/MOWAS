@@ -7,8 +7,10 @@ wip/
 *__pycache__/
 data/
 feature/xml/
+feature/camera/face_image/
 runs/
 test/img/
 *yolov8n.pt
 feature/json/
 dlib/
+

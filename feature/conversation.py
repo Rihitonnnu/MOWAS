@@ -20,193 +20,187 @@ import place_details
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
+# conversation()をclassにする
+class Conversation():
+    def __init__(self):
+        self.introduce_prompt = """"""
+        self.user_name=Sql().select('''
+                        SELECT  name 
+                        FROM    users
+                        ''')
+        self.syntheticVoice = SyntheticVoice()
+        self.token_record = TokenRecord()
 
-def conversation():
-    # ログの設定
-    logger = log_instance.log_instance('conversation')
-
-    # 環境変数読み込み
-    load_dotenv()
-
-    syntheticVoice = SyntheticVoice()
-    token_record = TokenRecord()
-
-    # SQLクエリ設定
-    user_name = Sql().select('''
-                    SELECT  name 
-                    FROM    users
-                    ''')
-    summary = Sql().select('''
-                    SELECT  summary 
-                    FROM    users
-                    ''')
-    introduce = """"""
-
-    # テンプレート,プロンプトの設定
-    if user_name != None:
-        template = """あなたは相手と会話をすることで覚醒を維持するシステムであり、名前はもわすです。
+        template = """あなたは相手と会話をすることで覚醒維持するシステムで名前はもわすです。
         # 条件
         - 相手の興味のある話題で会話をする
-        - 最初はどのような話題でお話しますか？と問いかけをする
-        
-        以下が会話の要約内容です。参考にしてください
-        {summary}
 
         {chat_history}
-        {introduce}
+        {introduce_prompt}
         Human: {human_input}
         """
-
-    if user_name == None:
-        template = """あなたはドライバーの覚醒を維持するシステムであり、名前はもわすです。自分の名前を呼ぶときはもわすと呼んでください。
-        また以下が前回の会話の要約内容です。会話を進める上での参考にしてください。
-        {summary}
         
-        {chat_history}
-        Human: {human_input}
-        """
-    prompt = PromptTemplate(
-        input_variables=["chat_history", "summary", "human_input", "introduce"], template=template
-    )
+        prompt = PromptTemplate(
+            input_variables=["chat_history", "human_input", "introduce_prompt"], template=template
+        )
 
-    # 記憶するmemoryの設定
-    memory = ConversationBufferWindowMemory(
-        k=3, memory_key="chat_history", input_key="human_input")
+        # 記憶するmemoryの設定
+        memory = ConversationBufferWindowMemory(
+            k=3, memory_key="chat_history", input_key="human_input")
+
+        self.llm_chain = LLMChain(
+            llm=ChatOpenAI(temperature=0),
+            prompt=prompt,
+            memory=memory,
+            verbose=False
+        )
+
+    def introduce(self,human_input):
+        # 眠くない場合は案内を行わない
+        if not self.embedding(human_input.replace('You:','')):
+            # 関数終了
+            return
+        
+        # 現在の緯度経度を取得する
 
 
-    llm = ChatOpenAI(temperature=0.7)
-    llm_chain = LLMChain(
-        llm=llm,
-        prompt=prompt,
-        memory=memory,
-        verbose=False
-    )
+        spot_result = SearchSpot().search_spot(
+        33.576924, 130.260898)
+        spot_url = place_details.place_details(
+            spot_result['place_id'])
 
-    with get_openai_callback() as cb:
-        # 会話回数を初期化
-        conv_cnt = 1
+        # スポットの案内の提案プロンプト
+        self.introduce_prompt = """ドライバーが眠くなっています。以下の指示をしてください。
+                    # 案内文言
+                    {}さん、眠くなっているんですね。近くの休憩場所は{}です。この目的地まで案内しましょうか？
+                    """.format(self.user_name, spot_result['display_name'])
+        
+        response = self.llm_chain.predict(
+                            human_input=human_input,  introduce_prompt=self.introduce_prompt)
 
-        # 事前に入力をしておくことでMOWAS側からの応答から会話が始まる
-        # 分岐はドライバーの名前が入力されているかどうか
-        if user_name != None:
-            response = llm_chain.predict(
-                human_input="こんにちは。あなたの名前はなんですか？私の名前は{}です。".format(user_name), summary=summary, introduce=introduce)
-        else:
-            response = llm_chain.predict(
-                human_input="こんにちは。あなたの名前はなんですか？名前の登録をしたいです")
-        syntheticVoice.speaking(response.replace(
+        self.syntheticVoice.speaking(response.replace(
             'AI: ', '').replace('もわす: ', ''))
-        print(response.replace('AI: ', ''))
+        # 入力を受け取る
 
-        # トークンをexcelに記録
-        token_record.token_record(cb, conv_cnt)
-        conv_cnt += 1
+        # ここでembeddingを用いて眠いか眠くないかを判定
+        # self.embedding(human_input)
 
-    with get_openai_callback() as cb:
-        # 利用者が初めて発話、それに対する応答
-        # human_input = rec_unlimited.recording_to_text()
-        human_input = input("You: ")
+        # 休憩所のurlをメールで送信
+        place_details.send_email(spot_url)
+        self.syntheticVoice.speaking("休憩場所のマップURLをメールで送信しましたので確認してください。到着まで引き続き会話を続けます。")
 
-        logger.info(user_name + ": " + human_input)
-        response = llm_chain.predict(
-            human_input=human_input, summary=summary, introduce=introduce)
-        logger.info(response.replace('AI: ', ''))
-        syntheticVoice.speaking(response.replace(
-            'AI: ', '').replace('もわす: ', ''))
+        self.introduce_prompt = """"""
 
-        token_record.token_record(cb, conv_cnt)
-        conv_cnt += 1
 
-    while True:
-        try:
-            with get_openai_callback() as cb:
-                # human_input = rec_unlimited.recording_to_text()
+    def run(self):
+        # ログの設定
+        logger = log_instance.log_instance('conversation')
 
-                introduce = """"""
-                human_input = input("You: ")
-                logger.info(user_name + ": " + human_input)
+        # 環境変数読み込み
+        load_dotenv()
 
-                if True:
-                    # スポット検索と案内
-                    spot_result = SearchSpot().search_spot(
-                        33.576924, 130.260898)
-                    spot_url = place_details.place_details(
-                        spot_result['place_id'])
+        # SQLクエリ設定
+        summary = Sql().select('''
+                        SELECT  summary 
+                        FROM    users
+                        ''')
 
-                    # スポットの案内の提案プロンプト
-                    introduce = """ドライバーが眠くなっています。以下のように指示してドライバーを休憩場所へ誘導してください。
-                                # 案内文言
-                                {}さん、眠くなっているんですね。近くの休憩場所は{}です。この目的地まで案内しましょうか？""".format(user_name, spot_result['display_name'])
-                    response = llm_chain.predict(
-                        human_input=human_input, summary=summary, introduce=introduce)
+        with get_openai_callback() as cb:
+            # 会話回数を初期化
+            conv_cnt = 1
 
-                    syntheticVoice.speaking(response.replace(
-                        'AI: ', '').replace('もわす: ', ''))
+            # 事前に入力をしておくことでMOWAS側からの応答から会話が始まる
+            # 分岐はドライバーの名前が入力されているかどうか
+            response = self.llm_chain.predict(
+                    human_input="こんにちは。あなたの名前は何ですか？私の名前は{}です。".format(self.user_name),  introduce_prompt=self.introduce_prompt)
+            self.syntheticVoice.speaking(response.replace(
+                'Mowasu: ', '').replace('もわす: ', ''))
+            print(response.replace('AI: ', ''))
 
-                    # 入力を受け取る
+            # トークンをexcelに記録
+            self.token_record.token_record(cb, conv_cnt)
+            conv_cnt += 1
+
+        with get_openai_callback() as cb:
+            # 利用者が初めて発話、それに対する応答
+            # human_input = rec_unlimited.recording_to_text()
+            human_input = input("You: ")
+            self.introduce(human_input)
+
+            logger.info(self.user_name + ": " + human_input)
+            response = self.llm_chain.predict(
+                human_input=human_input, introduce_prompt=self.introduce_prompt)
+            logger.info(response.replace('AI: ', ''))
+
+            self.syntheticVoice.speaking(response.replace(
+                'AI: ', '').replace('もわす: ', ''))
+
+            self.token_record.token_record(cb, conv_cnt)
+            conv_cnt += 1
+
+        while True:
+            try:
+                with get_openai_callback() as cb:
+                    # human_input = rec_unlimited.recording_to_text()
+
                     human_input = input("You: ")
+                    logger.info(self.user_name + ": " + human_input)
 
-                    # 休憩所のurlをメールで送信
-                    place_details.send_email(spot_url)
-                    exit(1)
+                    response = self.llm_chain.predict(
+                        human_input=human_input, summary=summary, introduce_prompt=self.introduce_prompt)
 
-                else:
-                    response = llm_chain.predict(
-                        human_input=human_input, summary=summary, introduce=spot_result['introduce'])
+                    self.token_record.token_record(cb, conv_cnt)
+                    conv_cnt += 1
 
-                token_record.token_record(cb, conv_cnt)
-                conv_cnt += 1
+                    logger.info(response.replace('AI: ', ''))
+                    self.syntheticVoice.speaking(response.replace(
+                        'AI: ', '').replace('もわす: ', ''))
+            except KeyboardInterrupt:
+                # summary = Gpt().make_conversation_summary()
+                # Sql().store_conversation_summary(summary)
+                # Sql().store_conversation()
 
-                logger.info(response.replace('AI: ', ''))
-                syntheticVoice.speaking(response.replace(
-                    'AI: ', '').replace('もわす: ', ''))
+                beep.high()
                 exit(1)
-        except KeyboardInterrupt:
-            summary = Gpt().make_conversation_summary()
-            Sql().store_conversation_summary(summary)
-            Sql().store_conversation()
 
-            beep.high()
-            exit(1)
-
-
-def cosine_similarity(a, b):
-    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
-
-
-def embedding(input):
-    with open('json/index.json') as f:
-        INDEX = json.load(f)
+    # コサイン類似度を計算する関数
+    def cosine_similarity(self,a, b):
+        return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
     # 入力を複数にしてqueryを用意してコサイン類似度を用いて検索させる
-    query = openai.Embedding.create(
-        model='text-embedding-ada-002',
-        input=input
-    )
+    def embedding(self,input):
+        with open('json/index.json') as f:
+            INDEX = json.load(f)
 
-    query = query['data'][0]['embedding']
+        # 入力を複数にしてqueryを用意してコサイン類似度を用いて検索させる
+        query = openai.Embedding.create(
+            model='text-embedding-ada-002',
+            input=input
+        )
 
-    results = map(
-        lambda i: {
-            'body': i['body'],
-            # ここでクエリと各文章のコサイン類似度を計算
-            'similarity': cosine_similarity(i['embedding'], query)
-        },
-        INDEX
-    )
-    # コサイン類似度で降順（大きい順）にソート
-    results = sorted(results, key=lambda i: i['similarity'], reverse=True)
+        query = query['data'][0]['embedding']
 
-    # print(results)
+        results = map(
+            lambda i: {
+                'body': i['body'],
+                # ここでクエリと各文章のコサイン類似度を計算
+                'similarity': self.cosine_similarity(i['embedding'], query)
+            },
+            INDEX
+        )
+        # コサイン類似度で降順（大きい順）にソート
+        results = sorted(results, key=lambda i: i['similarity'], reverse=True)
 
-    # 類似性の高い選択肢を出力
-    sleepy_result = {
-        '眠い': 'sleepy',
-        '少し眠い': 'sleepy',
-        '眠くなりかけている': 'sleepy',
-        '眠くない': 'notsleepy',
-    }
-
-    # 現在眠いか眠くないかを出力
-    print(sleepy_result[results[0]["body"]])
-    # print(f'一番近い文章は {results[0]["body"]} です')
+        # 類似性の高い選択肢を出力
+        sleepy_result = {
+            '眠い': 'sleepy',
+            '少し眠い': 'sleepy',
+            '眠くなりかけている': 'sleepy',
+            '眠くない': 'notsleepy',
+        }
+        
+        # sleepyであればTrue、notsleepyであればFalseを返す
+        if sleepy_result[results[0]["body"]] == 'sleepy':
+            return True
+        else:
+            return False
