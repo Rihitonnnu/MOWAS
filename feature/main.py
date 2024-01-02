@@ -28,8 +28,10 @@ except FileExistsError:
 #excelファイル作成
 wb = openpyxl.Workbook()
 sheet = wb.active
+# 回数カラムをexcelで作成
+sheet['A1'] = 'num'
 # reaction_timeカラムをexcelで作成
-sheet['A1'] = 'reaction_time'
+sheet['B1'] = 'reaction_time'
 reaction_time_sheet_path='../data/reaction_time/{}/{}.xlsx'.format(ymd,hms)
 wb.save(reaction_time_sheet_path)
 

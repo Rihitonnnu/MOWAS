@@ -133,12 +133,16 @@ def recording_to_text(reaction_time_sheet_path):
         sheet = wb.active
         # 最終行を取得
         last_row = sheet.max_row
-        # 最終行に書き込む
-        sheet.cell(row=last_row + 1, column=1, value=end-start)
+
+        # 回数カラムに書き込む
+        sheet.cell(row=last_row + 1, column=1, value=last_row)
+        # reaction_timeカラムに書き込む
+        sheet.cell(row=last_row + 1, column=2, value=end-start)
+
         # 保存
         wb.save(reaction_time_sheet_path)
 
-        # logger.info('Reaction time is {}'.format(end-start))
+        logger.info('Reaction time is {}'.format(end-start))
         
         print('\nRecording finished: ' + repr(args.filename))
         text = speechRecognitionGoogle.speech_recognition(args.filename)
