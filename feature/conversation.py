@@ -61,15 +61,19 @@ class Conversation():
             # 関数終了
             return
         
+        # 現在の緯度経度を取得する
+
+
         spot_result = SearchSpot().search_spot(
         33.576924, 130.260898)
         spot_url = place_details.place_details(
             spot_result['place_id'])
 
         # スポットの案内の提案プロンプト
-        self.introduce_prompt = """ドライバーが眠くなっています。以下のように指示してドライバーを休憩場所へ誘導してください。
+        self.introduce_prompt = """ドライバーが眠くなっています。以下の指示をしてください。
                     # 案内文言
-                    {}さん、眠くなっているんですね。近くの休憩場所は{}です。この目的地まで案内しましょうか？""".format(self.user_name, spot_result['display_name'])
+                    {}さん、眠くなっているんですね。近くの休憩場所は{}です。この目的地まで案内しましょうか？
+                    """.format(self.user_name, spot_result['display_name'])
         
         response = self.llm_chain.predict(
                             human_input=human_input,  introduce_prompt=self.introduce_prompt)
@@ -83,6 +87,9 @@ class Conversation():
 
         # 休憩所のurlをメールで送信
         place_details.send_email(spot_url)
+        self.syntheticVoice.speaking("休憩場所のマップURLをメールで送信しましたので確認してください。到着まで引き続き会話を続けます。")
+
+        self.introduce_prompt = """"""
 
 
     def run(self):
@@ -119,8 +126,6 @@ class Conversation():
             # human_input = rec_unlimited.recording_to_text()
             human_input = input("You: ")
             self.introduce(human_input)
-            
-            print(human_input.replace('You:',''))
 
             logger.info(self.user_name + ": " + human_input)
             response = self.llm_chain.predict(
@@ -150,7 +155,6 @@ class Conversation():
                     logger.info(response.replace('AI: ', ''))
                     self.syntheticVoice.speaking(response.replace(
                         'AI: ', '').replace('もわす: ', ''))
-                    exit(1)
             except KeyboardInterrupt:
                 # summary = Gpt().make_conversation_summary()
                 # Sql().store_conversation_summary(summary)
