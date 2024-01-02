@@ -31,6 +31,30 @@ class Conversation():
         self.syntheticVoice = SyntheticVoice()
         self.token_record = TokenRecord()
 
+        template = """あなたは相手と会話をすることで覚醒維持するシステムで名前はもわすです。
+        # 条件
+        - 相手の興味のある話題で会話をする
+
+        {chat_history}
+        {introduce_prompt}
+        Human: {human_input}
+        """
+        
+        prompt = PromptTemplate(
+            input_variables=["chat_history", "human_input", "introduce_prompt"], template=template
+        )
+
+        # 記憶するmemoryの設定
+        memory = ConversationBufferWindowMemory(
+            k=3, memory_key="chat_history", input_key="human_input")
+
+        self.llm_chain = LLMChain(
+            llm=ChatOpenAI(temperature=0),
+            prompt=prompt,
+            memory=memory,
+            verbose=False
+        )
+
     def introduce(self,human_input):
         # 眠くない場合は案内を行わない
         if not self.embedding(human_input.replace('You:','')):
@@ -47,7 +71,7 @@ class Conversation():
                     # 案内文言
                     {}さん、眠くなっているんですね。近くの休憩場所は{}です。この目的地まで案内しましょうか？""".format(self.user_name, spot_result['display_name'])
         
-        response = llm_chain.predict(
+        response = self.llm_chain.predict(
                             human_input=human_input,  introduce_prompt=self.introduce_prompt)
 
         self.syntheticVoice.speaking(response.replace(
@@ -74,39 +98,13 @@ class Conversation():
                         FROM    users
                         ''')
 
-        # テンプレート,プロンプトの設定
-        template = """あなたは相手と会話をすることで覚醒維持するシステムで名前はもわすです。
-        # 条件
-        - 相手の興味のある話題で会話をする
-
-        {chat_history}
-        {introduce_prompt}
-        Human: {human_input}
-        """
-        
-        prompt = PromptTemplate(
-            input_variables=["chat_history", "human_input", "introduce_prompt"], template=template
-        )
-
-        # 記憶するmemoryの設定
-        memory = ConversationBufferWindowMemory(
-            k=3, memory_key="chat_history", input_key="human_input")
-
-        llm_chain = LLMChain(
-            llm=ChatOpenAI(temperature=0),
-            prompt=prompt,
-            memory=memory,
-            verbose=False
-        )
-
         with get_openai_callback() as cb:
             # 会話回数を初期化
             conv_cnt = 1
 
             # 事前に入力をしておくことでMOWAS側からの応答から会話が始まる
             # 分岐はドライバーの名前が入力されているかどうか
-            if self.user_name != None:
-                response = llm_chain.predict(
+            response = self.llm_chain.predict(
                     human_input="こんにちは。あなたの名前は何ですか？私の名前は{}です。".format(self.user_name),  introduce_prompt=self.introduce_prompt)
             self.syntheticVoice.speaking(response.replace(
                 'Mowasu: ', '').replace('もわす: ', ''))
@@ -125,7 +123,7 @@ class Conversation():
             print(human_input.replace('You:',''))
 
             logger.info(self.user_name + ": " + human_input)
-            response = llm_chain.predict(
+            response = self.llm_chain.predict(
                 human_input=human_input, introduce_prompt=self.introduce_prompt)
             logger.info(response.replace('AI: ', ''))
 
@@ -140,43 +138,17 @@ class Conversation():
                 with get_openai_callback() as cb:
                     # human_input = rec_unlimited.recording_to_text()
 
-                    introduce = """"""
                     human_input = input("You: ")
-                    logger.info(user_name + ": " + human_input)
+                    logger.info(self.user_name + ": " + human_input)
 
-                    if True:
-                        # スポット検索と案内
-                        spot_result = SearchSpot().search_spot(
-                            33.576924, 130.260898)
-                        spot_url = place_details.place_details(
-                            spot_result['place_id'])
+                    response = self.llm_chain.predict(
+                        human_input=human_input, summary=summary, introduce_prompt=self.introduce_prompt)
 
-                        # スポットの案内の提案プロンプト
-                        introduce = """ドライバーが眠くなっています。以下のように指示してドライバーを休憩場所へ誘導してください。
-                                    # 案内文言
-                                    {}さん、眠くなっているんですね。近くの休憩場所は{}です。この目的地まで案内しましょうか？""".format(user_name, spot_result['display_name'])
-                        response = llm_chain.predict(
-                            human_input=human_input,  introduce=introduce)
-
-                        syntheticVoice.speaking(response.replace(
-                            'AI: ', '').replace('もわす: ', ''))
-
-                        # 入力を受け取る
-                        human_input = input("You: ")
-
-                        # 休憩所のurlをメールで送信
-                        place_details.send_email(spot_url)
-                        exit(1)
-
-                    else:
-                        response = llm_chain.predict(
-                            human_input=human_input, summary=summary, introduce=spot_result['introduce'])
-
-                    token_record.token_record(cb, conv_cnt)
+                    self.token_record.token_record(cb, conv_cnt)
                     conv_cnt += 1
 
                     logger.info(response.replace('AI: ', ''))
-                    syntheticVoice.speaking(response.replace(
+                    self.syntheticVoice.speaking(response.replace(
                         'AI: ', '').replace('もわす: ', ''))
                     exit(1)
             except KeyboardInterrupt:
@@ -187,11 +159,11 @@ class Conversation():
                 beep.high()
                 exit(1)
 
-
+    # コサイン類似度を計算する関数
     def cosine_similarity(self,a, b):
         return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
-
+    # 入力を複数にしてqueryを用意してコサイン類似度を用いて検索させる
     def embedding(self,input):
         with open('json/index.json') as f:
             INDEX = json.load(f)
@@ -228,4 +200,3 @@ class Conversation():
             return True
         else:
             return False
-        # print(f'一番近い文章は {results[0]["body"]} です')
