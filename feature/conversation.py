@@ -44,13 +44,10 @@ def conversation():
 
     # テンプレート,プロンプトの設定
     if user_name != None:
-        template = """あなたは相手と会話をすることで覚醒を維持するシステムであり、名前はもわすです。
+        template = """あなたは相手と会話をすることで覚醒維持するシステムで名前はもわすです。
         # 条件
-        - 「会話を行いながら覚醒維持を行います」と伝える
+        - 「会話を行いながら覚醒維持を行います」、「眠くなった場合は私に眠いと伝えてください」と伝える
         - 相手の興味のある話題で会話をする
-        
-        以下が会話の要約内容です。参考にしてください
-        {summary}
 
         {chat_history}
         {introduce}
@@ -58,7 +55,7 @@ def conversation():
         """
     
     prompt = PromptTemplate(
-        input_variables=["chat_history", "summary", "human_input", "introduce"], template=template
+        input_variables=["chat_history", "human_input", "introduce"], template=template
     )
 
     # 記憶するmemoryの設定
@@ -82,7 +79,7 @@ def conversation():
         # 分岐はドライバーの名前が入力されているかどうか
         if user_name != None:
             response = llm_chain.predict(
-                human_input="こんにちは。あなたの名前はなんですか？私の名前は{}です。".format(user_name), summary=summary, introduce=introduce)
+                human_input="こんにちは。あなたの名前は何ですか？私の名前は{}です。".format(user_name),  introduce=introduce)
         else:
             response = llm_chain.predict(
                 human_input="こんにちは。あなたの名前はなんですか？名前の登録をしたいです")
@@ -101,7 +98,7 @@ def conversation():
 
         logger.info(user_name + ": " + human_input)
         response = llm_chain.predict(
-            human_input=human_input, summary=summary, introduce=introduce)
+            human_input=human_input, introduce=introduce)
         logger.info(response.replace('AI: ', ''))
         syntheticVoice.speaking(response.replace(
             'AI: ', '').replace('もわす: ', ''))
@@ -130,7 +127,7 @@ def conversation():
                                 # 案内文言
                                 {}さん、眠くなっているんですね。近くの休憩場所は{}です。この目的地まで案内しましょうか？""".format(user_name, spot_result['display_name'])
                     response = llm_chain.predict(
-                        human_input=human_input, summary=summary, introduce=introduce)
+                        human_input=human_input,  introduce=introduce)
 
                     syntheticVoice.speaking(response.replace(
                         'AI: ', '').replace('もわす: ', ''))
@@ -154,9 +151,9 @@ def conversation():
                     'AI: ', '').replace('もわす: ', ''))
                 exit(1)
         except KeyboardInterrupt:
-            summary = Gpt().make_conversation_summary()
-            Sql().store_conversation_summary(summary)
-            Sql().store_conversation()
+            # summary = Gpt().make_conversation_summary()
+            # Sql().store_conversation_summary(summary)
+            # Sql().store_conversation()
 
             beep.high()
             exit(1)
