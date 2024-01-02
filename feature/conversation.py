@@ -17,6 +17,7 @@ import log_instance
 from token_record import TokenRecord
 from search_spot import SearchSpot
 import place_details
+from udp.udp_receive import UDPReceive
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
@@ -67,10 +68,10 @@ class Conversation():
             return
         
         # 現在の緯度経度を取得する
+        coordinates_results=UDPReceive('127.0.0.1',2002).get_coordinates()
 
-
-        spot_result = SearchSpot().search_spot(
-        33.576924, 130.260898)
+        spot_result = SearchSpot().search_spot(coordinates_results[0],coordinates_results[1])
+        
         spot_url = place_details.place_details(
             spot_result['place_id'])
 
@@ -130,8 +131,8 @@ class Conversation():
 
         with get_openai_callback() as cb:
             # 利用者が初めて発話、それに対する応答
-            human_input = rec_unlimited.recording_to_text(self.reaction_time_sheet_path)
-            # human_input = input("You: ")
+            # human_input = rec_unlimited.recording_to_text(self.reaction_time_sheet_path)
+            human_input = input("You: ")
             self.introduce(human_input)
 
             logger.info(self.user_name + ": " + human_input)
