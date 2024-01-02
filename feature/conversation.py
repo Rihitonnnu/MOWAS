@@ -24,7 +24,7 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 class Conversation():
     def __init__(self):
         # jsonのパスを設定
-        self.sleepy_json_path='json/embedding/index.json'
+        self.sleepy_json_path='json/embedding/is_sleepy.json'
         self.introduce_reaction_json_path='json/embedding/introduce_reaction.json'
 
         self.introduce_prompt = """"""
@@ -61,7 +61,7 @@ class Conversation():
 
     def introduce(self,human_input):
         # 眠くない場合は案内を行わない
-        if not self.embedding(human_input.replace('You:','')):
+        if not self.embedding(self.sleepy_json_path,human_input.replace('You:','')):
             # 関数終了
             return
         
@@ -84,17 +84,19 @@ class Conversation():
 
         self.syntheticVoice.speaking(response.replace(
             'AI: ', '').replace('もわす: ', ''))
+        
         # 入力を受け取る
+        introduce_reaction_response = input("You: ")
 
         # ここでembeddingを用いて眠いか眠くないかを判定
-        # self.embedding(human_input)
+        result=self.embedding(self.introduce_reaction_json_path,introduce_reaction_response.replace('You:',''))
 
-        # 休憩所のurlをメールで送信
-        place_details.send_email(spot_url)
-        self.syntheticVoice.speaking("休憩場所のマップURLをメールで送信しましたので確認してください。到着まで引き続き会話を続けます。")
+        if result:
+            # 休憩所のurlをメールで送信
+            place_details.send_email(spot_url)
+            self.syntheticVoice.speaking("了解しました。休憩場所のマップURLをメールで送信しましたので確認してください。到着まで引き続き会話を続けます。")
 
         self.introduce_prompt = """"""
-
 
     def run(self):
         # ログの設定
@@ -215,4 +217,5 @@ class Conversation():
             }
         
         # 眠ければTrue、眠くなければFalseを返す
+        # print(result[results[0]["body"]])
         return result[results[0]["body"]]
