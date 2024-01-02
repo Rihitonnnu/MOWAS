@@ -63,8 +63,7 @@ class Conversation():
 
     def introduce(self,human_input):
         # 眠くない場合は案内を行わない
-        if not self.embedding(self.sleepy_json_path,human_input.replace('You:','')):
-            # 関数終了
+        if not human_input=='眠いです':
             return
         
         # 現在の緯度経度を取得する
