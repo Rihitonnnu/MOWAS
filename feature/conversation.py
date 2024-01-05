@@ -129,29 +129,14 @@ class Conversation():
             self.token_record.token_record(cb, conv_cnt)
             conv_cnt += 1
 
-        with get_openai_callback() as cb:
-            # 利用者が初めて発話、それに対する応答
-            # human_input = rec_unlimited.recording_to_text(self.reaction_time_sheet_path)
-            human_input = input("You: ")
-            self.introduce(human_input)
-
-            logger.info(self.user_name + ": " + human_input)
-            response = self.llm_chain.predict(
-                human_input=human_input, introduce_prompt=self.introduce_prompt)
-            logger.info(response.replace('AI: ', ''))
-
-            self.syntheticVoice.speaking(response.replace(
-                'AI: ', '').replace('もわす: ', ''))
-
-            self.token_record.token_record(cb, conv_cnt)
-            conv_cnt += 1
-
         while True:
             try:
                 with get_openai_callback() as cb:
                     # human_input = rec_unlimited.recording_to_text()
 
                     human_input = input("You: ")
+                    self.introduce(human_input)
+
                     logger.info(self.user_name + ": " + human_input)
 
                     response = self.llm_chain.predict(
