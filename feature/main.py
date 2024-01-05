@@ -5,6 +5,7 @@ import view.option_window
 import udp.udp_receive
 import openpyxl
 import datetime
+import beep
 
 # 現在時刻を取得
 now=datetime.datetime.now()
@@ -35,11 +36,13 @@ sheet['B1'] = 'reaction_time'
 reaction_time_sheet_path='../data/reaction_time/{}/{}.xlsx'.format(ymd,hms)
 wb.save(reaction_time_sheet_path)
 
-# # 眠くなりかけるまで待機
-# while True:
-#     is_sleepy=udp.udp_receive.UDPReceive('127.0.0.1',2002).is_sleepy()
+# 眠くなりかけるまで待機
+while True:
+    is_sleepy=udp.udp_receive.UDPReceive('127.0.0.1',2002).is_sleepy()
 
-#     if is_sleepy:
-#         break
+    if is_sleepy:
+        # beep音を鳴らす
+        beep.high()
+        break
 
 Conversation(reaction_time_sheet_path).run()
