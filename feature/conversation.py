@@ -37,6 +37,8 @@ class Conversation():
         self.syntheticVoice = SyntheticVoice()
         self.token_record = TokenRecord()
 
+        self.human_input = ""
+
         template = """あなたは相手と会話をすることで覚醒維持するシステムで名前はもわすです。
         # 条件
         - 「会話を行いながら覚醒維持を行います」、「眠くなった場合は私に眠いと伝えてください」と伝える
@@ -76,7 +78,7 @@ class Conversation():
             spot_result['place_id'])
 
         # スポットの案内の提案プロンプト
-        self.introduce_prompt = """ドライバーが眠くなっています。以下の指示をしてください。
+        self.introduce_prompt = """以下の案内文言を読んでください。
                     # 案内文言
                     {}さん、眠くなっているんですね。近くの休憩場所は{}です。この目的地まで案内しましょうか？
                     """.format(self.user_name, spot_result['display_name'])
@@ -99,6 +101,9 @@ class Conversation():
             self.syntheticVoice.speaking("了解しました。休憩場所のマップURLをメールで送信しましたので確認してください。到着まで引き続き会話を続けます。")
 
         self.introduce_prompt = """"""
+
+        # 再度会話をするためにhuman_inputを初期化
+        self.human_input="何か話題を振ってください。"
 
     def run(self):
         # ログの設定
@@ -134,13 +139,13 @@ class Conversation():
                 with get_openai_callback() as cb:
                     # human_input = rec_unlimited.recording_to_text()
 
-                    human_input = input("You: ")
-                    self.introduce(human_input)
+                    self.human_input = input("You: ")
+                    self.introduce(self.human_input)
 
-                    logger.info(self.user_name + ": " + human_input)
+                    logger.info(self.user_name + ": " + self.human_input)
 
                     response = self.llm_chain.predict(
-                        human_input=human_input, summary=summary, introduce_prompt=self.introduce_prompt)
+                        human_input=self.human_input, summary=summary, introduce_prompt=self.introduce_prompt)
 
                     self.token_record.token_record(cb, conv_cnt)
                     conv_cnt += 1
@@ -149,6 +154,7 @@ class Conversation():
                     self.syntheticVoice.speaking(response.replace(
                         'AI: ', '').replace('もわす: ', ''))
             except KeyboardInterrupt:
+                # 会話の要約をDBに格納
                 # summary = Gpt().make_conversation_summary()
                 # Sql().store_conversation_summary(summary)
                 # Sql().store_conversation()
