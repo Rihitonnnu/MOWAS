@@ -28,6 +28,10 @@ class UDPReceive():
         try :
             # 受付待ち
             print('Waiting data...')
+            # 途中で強制終了できるようにする
+            self.sock.settimeout(20)
+
+            # 受信
             data, cli_addr = self.sock.recvfrom(1024)
 
             coordinates_result=[]
@@ -44,3 +48,6 @@ class UDPReceive():
 
     def close(self):
         self.sock.close()
+
+# UDPReceive('192.168.11.50', 2002).get_coordinates()
+# UDPReceive('127.0.0.1', 2002).get_coordinates()
