@@ -17,12 +17,18 @@ import log_instance
 from token_record import TokenRecord
 from search_spot import SearchSpot
 import place_details
+from udp.udp_receive import UDPReceive
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
 # conversation()をclassにする
 class Conversation():
-    def __init__(self):
+    def __init__(self,reaction_time_sheet_path):
+        self.reaction_time_sheet_path=reaction_time_sheet_path
+        # jsonのパスを設定
+        self.sleepy_json_path='json/embedding/is_sleepy.json'
+        self.introduce_reaction_json_path='json/embedding/introduce_reaction.json'
+
         self.introduce_prompt = """"""
         self.user_name=Sql().select('''
                         SELECT  name 
@@ -31,8 +37,11 @@ class Conversation():
         self.syntheticVoice = SyntheticVoice()
         self.token_record = TokenRecord()
 
+        self.human_input = ""
+
         template = """あなたは相手と会話をすることで覚醒維持するシステムで名前はもわすです。
         # 条件
+        - 「会話を行いながら覚醒維持を行います」、「眠くなった場合は私に眠いと伝えてください」と伝える
         - 相手の興味のある話題で会話をする
 
         {chat_history}
@@ -57,20 +66,19 @@ class Conversation():
 
     def introduce(self,human_input):
         # 眠くない場合は案内を行わない
-        if not self.embedding(human_input.replace('You:','')):
-            # 関数終了
+        if not human_input=='眠いです':
             return
         
         # 現在の緯度経度を取得する
+        coordinates_results=UDPReceive('127.0.0.1',2002).get_coordinates()
 
-
-        spot_result = SearchSpot().search_spot(
-        33.576924, 130.260898)
+        spot_result = SearchSpot().search_spot(coordinates_results[0],coordinates_results[1])
+        
         spot_url = place_details.place_details(
             spot_result['place_id'])
 
         # スポットの案内の提案プロンプト
-        self.introduce_prompt = """ドライバーが眠くなっています。以下の指示をしてください。
+        self.introduce_prompt = """以下の案内文言を読んでください。
                     # 案内文言
                     {}さん、眠くなっているんですね。近くの休憩場所は{}です。この目的地まで案内しましょうか？
                     """.format(self.user_name, spot_result['display_name'])
@@ -80,17 +88,22 @@ class Conversation():
 
         self.syntheticVoice.speaking(response.replace(
             'AI: ', '').replace('もわす: ', ''))
+        
         # 入力を受け取る
+        introduce_reaction_response = input("You: ")
 
         # ここでembeddingを用いて眠いか眠くないかを判定
-        # self.embedding(human_input)
+        result=self.embedding(self.introduce_reaction_json_path,introduce_reaction_response.replace('You:',''))
 
-        # 休憩所のurlをメールで送信
-        place_details.send_email(spot_url)
-        self.syntheticVoice.speaking("休憩場所のマップURLをメールで送信しましたので確認してください。到着まで引き続き会話を続けます。")
+        if result:
+            # 休憩所のurlをメールで送信
+            place_details.send_email(spot_url)
+            self.syntheticVoice.speaking("了解しました。休憩場所のマップURLをメールで送信しましたので確認してください。到着まで引き続き会話を続けます。")
 
         self.introduce_prompt = """"""
 
+        # 再度会話をするためにhuman_inputを初期化
+        self.human_input="何か話題を振ってください。"
 
     def run(self):
         # ログの設定
@@ -121,33 +134,18 @@ class Conversation():
             self.token_record.token_record(cb, conv_cnt)
             conv_cnt += 1
 
-        with get_openai_callback() as cb:
-            # 利用者が初めて発話、それに対する応答
-            # human_input = rec_unlimited.recording_to_text()
-            human_input = input("You: ")
-            self.introduce(human_input)
-
-            logger.info(self.user_name + ": " + human_input)
-            response = self.llm_chain.predict(
-                human_input=human_input, introduce_prompt=self.introduce_prompt)
-            logger.info(response.replace('AI: ', ''))
-
-            self.syntheticVoice.speaking(response.replace(
-                'AI: ', '').replace('もわす: ', ''))
-
-            self.token_record.token_record(cb, conv_cnt)
-            conv_cnt += 1
-
         while True:
             try:
                 with get_openai_callback() as cb:
                     # human_input = rec_unlimited.recording_to_text()
 
-                    human_input = input("You: ")
-                    logger.info(self.user_name + ": " + human_input)
+                    self.human_input = input("You: ")
+                    self.introduce(self.human_input)
+
+                    logger.info(self.user_name + ": " + self.human_input)
 
                     response = self.llm_chain.predict(
-                        human_input=human_input, summary=summary, introduce_prompt=self.introduce_prompt)
+                        human_input=self.human_input, summary=summary, introduce_prompt=self.introduce_prompt)
 
                     self.token_record.token_record(cb, conv_cnt)
                     conv_cnt += 1
@@ -156,6 +154,7 @@ class Conversation():
                     self.syntheticVoice.speaking(response.replace(
                         'AI: ', '').replace('もわす: ', ''))
             except KeyboardInterrupt:
+                # 会話の要約をDBに格納
                 # summary = Gpt().make_conversation_summary()
                 # Sql().store_conversation_summary(summary)
                 # Sql().store_conversation()
@@ -168,8 +167,8 @@ class Conversation():
         return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
     # 入力を複数にしてqueryを用意してコサイン類似度を用いて検索させる
-    def embedding(self,input):
-        with open('json/index.json') as f:
+    def embedding(self,json_path,input):
+        with open(json_path) as f:
             INDEX = json.load(f)
 
         # 入力を複数にしてqueryを用意してコサイン類似度を用いて検索させる
@@ -192,15 +191,24 @@ class Conversation():
         results = sorted(results, key=lambda i: i['similarity'], reverse=True)
 
         # 類似性の高い選択肢を出力
-        sleepy_result = {
-            '眠い': 'sleepy',
-            '少し眠い': 'sleepy',
-            '眠くなりかけている': 'sleepy',
-            '眠くない': 'notsleepy',
-        }
+        if json_path==self.sleepy_json_path:
+            result = {
+                '眠い': True,
+                '少し眠い': True,
+                '眠くなりかけている': True,
+                '眠くない': False,
+            }
         
-        # sleepyであればTrue、notsleepyであればFalseを返す
-        if sleepy_result[results[0]["body"]] == 'sleepy':
-            return True
-        else:
-            return False
+        if json_path==self.introduce_reaction_json_path:
+            result = {
+                'はい': True,
+                'してください': True,
+                'お願いします': True,
+                'いいえ': False,
+                'しないでください': False,
+                '大丈夫です': False,
+            }
+        
+        # 眠ければTrue、眠くなければFalseを返す
+        # print(result[results[0]["body"]])
+        return result[results[0]["body"]]

@@ -9,7 +9,7 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 
 index = []
 
-options = ['はい', 'いいえ', 'してください', 'しないでください']
+options = ['はい','してください','お願いします', 'いいえ', 'しないでください','大丈夫です']
 for option in options:
     res = openai.Embedding.create(
         model='text-embedding-ada-002',
