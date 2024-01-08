@@ -51,19 +51,32 @@ class UDPReceive():
             # 途中で強制終了できるようにする
             self.sock.settimeout(20)
 
+            # 受信バッファを作成
+            buffer = bytearray(1024)
+
             # 受信
-            data, cli_addr = self.sock.recvfrom(1024)
+            nbytes, cli_addr = self.sock.recvfrom_into(buffer)
+
+            # nbytesバイトのデータを取得
+            data = buffer[:nbytes]
 
             # bool型に変換
-            data = struct.unpack('?', data)[0]
+            if len(data)>=1:
+                data = struct.unpack('?', data)[0]
 
-            return data
+                # dataのlenと中身をprintする
+                print('Received data: {}'.format(data))
+                return data
         except KeyboardInterrupt:
             print ('\\n . . .\\n')
             self.sock.close()
             return None
+        except Exception as e:
+            pass
 
     def close(self):
         self.sock.close()
 
-UDPReceive('127.0.0.1', 2002).get_coordinates()
+# result=UDPReceive('127.0.0.1', 12345).is_finish_speaking()
+# if not result:
+#     print('ハンドルのボタンが押されました')
