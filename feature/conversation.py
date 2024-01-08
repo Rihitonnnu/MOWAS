@@ -70,7 +70,7 @@ class Conversation():
             return
         
         # 現在の緯度経度を取得する
-        coordinates_results=UDPReceive('127.0.0.1',2002).get_coordinates()
+        coordinates_results=UDPReceive(os.environ['MATSUKI7_IP'],12345).get_coordinates()
 
         spot_result = SearchSpot().search_spot(coordinates_results[0],coordinates_results[1])
         
