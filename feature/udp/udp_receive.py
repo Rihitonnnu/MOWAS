@@ -45,6 +45,25 @@ class UDPReceive():
             print ('\\n . . .\\n')
             self.sock.close()
             return None
+    
+    def is_finish_speaking(self):
+        try :
+            # 受付待ち
+            print('Waiting data...')
+            # 途中で強制終了できるようにする
+            self.sock.settimeout(20)
+
+            # 受信
+            data, cli_addr = self.sock.recvfrom(1024)
+
+            # bool型に変換
+            data = struct.unpack('?', data)[0]
+
+            return data
+        except KeyboardInterrupt:
+            print ('\\n . . .\\n')
+            self.sock.close()
+            return None
 
     def close(self):
         self.sock.close()
