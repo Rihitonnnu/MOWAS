@@ -48,8 +48,6 @@ class UDPReceive():
     
     def is_finish_speaking(self):
         try :
-            # 受付待ち
-            print('Waiting data...')
             # 途中で強制終了できるようにする
             self.sock.settimeout(20)
 
@@ -68,5 +66,4 @@ class UDPReceive():
     def close(self):
         self.sock.close()
 
-# UDPReceive('192.168.11.50', 2002).get_coordinates()
-# UDPReceive('127.0.0.1', 2002).get_coordinates()
+UDPReceive('127.0.0.1', 2002).get_coordinates()
