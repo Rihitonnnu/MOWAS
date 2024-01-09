@@ -1,5 +1,8 @@
 import socket
 import struct
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 class UDPReceive():
     def __init__(self, host, port):
@@ -80,3 +83,9 @@ class UDPReceive():
 # result=UDPReceive('127.0.0.1', 12345).is_finish_speaking()
 # if not result:
 #     print('ハンドルのボタンが押されました')
+
+# udp_receive=UDPReceive(os.environ['MATSUKI7_IP'], 12345)
+# while True:
+#     if udp_receive.is_finish_speaking():
+#         break
+
