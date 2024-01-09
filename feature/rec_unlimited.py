@@ -16,6 +16,7 @@ import time as pf_time
 import os
 import beep
 import openpyxl
+from udp.udp_receive import UDPReceive
 
 import sounddevice as sd
 import soundfile as sf
@@ -82,7 +83,6 @@ args = parser.parse_args(remaining)
 
 q = queue.Queue()
 
-
 def callback(indata, frames, time, status):
     """This is called (from a separate thread) for each audio block."""
     if status:
@@ -116,13 +116,38 @@ def recording_to_text(reaction_time_sheet_path):
             with sd.InputStream(samplerate=args.samplerate, device=args.device,
                                 channels=args.channels, callback=callback):
                 print('#' * 80)
-                print('press Ctrl+C to stop the recording')
+                print('ハンドルのボタンで発話を終了')
                 print('#' * 80)
                 while True:
                     # soundfileに書き込んでいる、writeはsoundfileのメソッド
                     file.write(q.get())
                     if pf_time.perf_counter()-start > 30:
                         raise Exception
+                    
+                    # ハンドルのボタンが押されたら終了
+                    if UDPReceive('127.0.0.1', 12345).is_finish_speaking():
+                        beep.low()
+
+                        # excelシートを読み込む
+                        wb = openpyxl.load_workbook(reaction_time_sheet_path)
+                        sheet = wb.active
+                        # 最終行を取得
+                        last_row = sheet.max_row
+
+                        # 回数カラムに書き込む
+                        sheet.cell(row=last_row + 1, column=1, value=last_row)
+                        # reaction_timeカラムに書き込む
+                        sheet.cell(row=last_row + 1, column=2, value=end-start)
+
+                        # 保存
+                        wb.save(reaction_time_sheet_path)
+
+                        logger.info('Reaction time is {}'.format(end-start))
+                        
+                        print('\nRecording finished: ' + repr(args.filename))
+                        text = speechRecognitionGoogle.speech_recognition(args.filename)
+                        return text
+                        parser.exit(0)
     except KeyboardInterrupt:
         beep.low()
         print(end)
