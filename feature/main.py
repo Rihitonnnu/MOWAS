@@ -14,7 +14,7 @@ hms=now.strftime('%H%M%S')
 
 # ディレクトリやファイル作成
 try:
-    os.mkdir('../sound')
+    os.mkdir('../sound/{}'.format(now.strftime('%Y%m%d')))
 except FileExistsError:
     pass
 try:
@@ -36,13 +36,13 @@ sheet['B1'] = 'reaction_time'
 reaction_time_sheet_path='../data/reaction_time/{}/{}.xlsx'.format(ymd,hms)
 wb.save(reaction_time_sheet_path)
 
-# 眠くなりかけるまで待機
-while True:
-    is_sleepy=udp.udp_receive.UDPReceive('127.0.0.1',2002).is_sleepy()
+# # 眠くなりかけるまで待機
+# while True:
+#     is_sleepy=udp.udp_receive.UDPReceive('127.0.0.1',2002).is_sleepy()
 
-    if is_sleepy:
-        # beep音を鳴らす
-        beep.high()
-        break
+#     if is_sleepy:
+#         # beep音を鳴らす
+#         beep.high()
+#         break
 
 Conversation(reaction_time_sheet_path).run()
