@@ -67,12 +67,11 @@ class Recording:
                     print('ハンドルのボタンで発話を終了')
                     print('#' * 80)
                     while True:
-                        # ハンドルのボタンが押されたら終了
-                        if self.udp_receive.is_finish_speaking():
-                            raise KeyboardInterrupt
                         # soundfileに書き込んでいる、writeはsoundfileのメソッド
-                        file.write(self.q.get())
-                        
+                        # file.write(self.q.get())
+                        # ハンドルのボタンが押されたら終了
+                        if self.udp_receive.is_finish_speaking(file,self.q):
+                            raise KeyboardInterrupt
                         
         except KeyboardInterrupt:
             beep.low()

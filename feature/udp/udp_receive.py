@@ -1,4 +1,5 @@
 import socket
+import errno
 import struct
 import os
 from dotenv import load_dotenv
@@ -49,7 +50,7 @@ class UDPReceive():
             self.sock.close()
             return None
     
-    def is_finish_speaking(self):
+    def is_finish_speaking(self,file,q):
         try :
             # 途中で強制終了できるようにする
             self.sock.settimeout(20)
@@ -62,6 +63,9 @@ class UDPReceive():
 
             # nbytesバイトのデータを取得
             data = buffer[:nbytes]
+            
+            # 音声ファイルの書き込み
+            file.write(q.get())
 
             # bool型に変換
             if len(data)>=1:
@@ -80,6 +84,10 @@ class UDPReceive():
     def close(self):
         self.sock.close()
 
+# udp_receive=UDPReceive('127.0.0.1', 12345)
+# while True:
+#     if udp_receive.is_finish_speaking():
+#         break
 # udp_receive=UDPReceive(os.environ['MATSUKI7_IP'], 12345)
 # while True:
 #     if udp_receive.is_finish_speaking():
