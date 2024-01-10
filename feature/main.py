@@ -38,7 +38,7 @@ wb.save(reaction_time_sheet_path)
 
 # # 眠くなりかけるまで待機
 # while True:
-#     is_sleepy=udp.udp_receive.UDPReceive('127.0.0.1',2002).is_sleepy()
+#     is_sleepy=udp.udp_receive.UDPReceive('127.0.0.1',12345).is_sleepy()
 
 #     if is_sleepy:
 #         # beep音を鳴らす
