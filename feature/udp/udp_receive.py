@@ -1,4 +1,5 @@
 import socket
+import datetime
 import errno
 import struct
 import os
@@ -52,12 +53,12 @@ class UDPReceive():
     
     def is_finish_speaking(self,file,q):
         try :
+            reaction_time = datetime.datetime.now()
             # 途中で強制終了できるようにする
             self.sock.settimeout(20)
 
             # 受信バッファを作成
             buffer = bytearray(1024)
-
             # 受信
             nbytes, cli_addr = self.sock.recvfrom_into(buffer)
 
@@ -70,11 +71,29 @@ class UDPReceive():
             # bool型に変換
             if len(data)>=1:
                 data = struct.unpack('?', data)[0]
-
                 # dataのlenと中身をprintする
                 print('Received data: {}'.format(data))
                 return data
         except KeyboardInterrupt:
+            print ('\\n . . .\\n')
+            self.sock.close()
+            return None
+        except Exception as e:
+            pass
+    
+    def test(self):
+        try :
+            # udpで送信された時刻を取得
+            self.sock.settimeout(20)
+            # 受信
+            data, cli_addr = self.sock.recvfrom(1024)
+            # dataを文字列に変換
+            data=data.decode('utf-8')
+            # dataを日付型に変換
+            # data=datetime.datetime.strptime(data.decode('utf-8'), '%Y-%m-%d %H:%M:%S.%f')
+            return data
+        except KeyboardInterrupt:
+            exit(1)
             print ('\\n . . .\\n')
             self.sock.close()
             return None
@@ -92,4 +111,18 @@ class UDPReceive():
 # while True:
 #     if udp_receive.is_finish_speaking():
 #         break
+
+# データを受け取るまでループする、データを受け取ったらループを抜ける
+while True:
+    date=UDPReceive('127.0.0.1', 12345).test()
+
+    if date is not None:
+        # dateを日付型に変換
+        result=datetime.datetime.strptime(date, '%Y/%m/%d %H:%M:%S.%f')
+
+        # resultの%fを削除
+        result=result.strftime('%Y/%m/%d %H:%M:%S')
+        print(result)
+        break
+
 
