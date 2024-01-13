@@ -53,7 +53,7 @@ class UDPReceive():
     
     def is_finish_speaking(self,file,q):
         try :
-            reaction_time = datetime.datetime.now()
+            # reaction_time = datetime.datetime.now()
             # 途中で強制終了できるようにする
             self.sock.settimeout(20)
 
@@ -81,14 +81,14 @@ class UDPReceive():
         except Exception as e:
             pass
     
+    # udpで送信された時刻を取得
     def test(self):
         try :
-            # udpで送信された時刻を取得
-            self.sock.settimeout(20)
             # 受信
             data, cli_addr = self.sock.recvfrom(1024)
             # dataを文字列に変換
             data=data.decode('utf-8')
+            print('Received data: {}'.format(data))
             # dataを日付型に変換
             # data=datetime.datetime.strptime(data.decode('utf-8'), '%Y-%m-%d %H:%M:%S.%f')
             return data
@@ -113,16 +113,16 @@ class UDPReceive():
 #         break
 
 # データを受け取るまでループする、データを受け取ったらループを抜ける
-while True:
-    date=UDPReceive('127.0.0.1', 12345).test()
+# while True:
+#     date=UDPReceive('127.0.0.1', 12345).test()
 
-    if date is not None:
-        # dateを日付型に変換
-        result=datetime.datetime.strptime(date, '%Y/%m/%d %H:%M:%S.%f')
+#     if date is not None:
+#         # dateを日付型に変換
+#         result=datetime.datetime.strptime(date, '%Y/%m/%d %H:%M:%S.%f')
 
-        # resultの%fを削除
-        result=result.strftime('%Y/%m/%d %H:%M:%S')
-        print(result)
-        break
+#         # resultの%fを削除
+#         result=result.strftime('%Y/%m/%d %H:%M:%S')
+#         print(result)
+#         break
 
 
