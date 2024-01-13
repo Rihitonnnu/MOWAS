@@ -53,10 +53,6 @@ class UDPReceive():
     
     def is_finish_speaking(self,file,q):
         try :
-            # reaction_time = datetime.datetime.now()
-            # 途中で強制終了できるようにする
-            self.sock.settimeout(20)
-
             # 受信バッファを作成
             buffer = bytearray(1024)
             # 受信
@@ -84,16 +80,15 @@ class UDPReceive():
     # udpで送信された時刻を取得
     def test(self):
         try :
-            # 受信
+            # 受信バッファを作成
             data, cli_addr = self.sock.recvfrom(1024)
+
             # dataを文字列に変換
             data=data.decode('utf-8')
+
             print('Received data: {}'.format(data))
-            # dataを日付型に変換
-            # data=datetime.datetime.strptime(data.decode('utf-8'), '%Y-%m-%d %H:%M:%S.%f')
             return data
         except KeyboardInterrupt:
-            exit(1)
             print ('\\n . . .\\n')
             self.sock.close()
             return None
@@ -103,10 +98,6 @@ class UDPReceive():
     def close(self):
         self.sock.close()
 
-# udp_receive=UDPReceive('127.0.0.1', 12345)
-# while True:
-#     if udp_receive.is_finish_speaking():
-#         break
 # udp_receive=UDPReceive(os.environ['MATSUKI7_IP'], 12345)
 # while True:
 #     if udp_receive.is_finish_speaking():
