@@ -26,8 +26,8 @@ class Recording:
         self.channels = channels
         self.subtype = subtype
         self.q = queue.Queue()
-        self.start = 0
-        self.end = 0
+        self.start_time = 0
+        self.end_time = 0
         self.VOLUME_THRESHOLD = 10
         self.IS_RECORDING = False
         # self.udp_receive = UDPReceive(os.environ['MATSUKI7_IP'], 12345)
@@ -61,7 +61,7 @@ class Recording:
                                                 suffix='.wav', dir='../sound/{}'.format(datetime.datetime.now().strftime('%Y%m%d')))
 
             beep.high()
-            self.start = pf_time.perf_counter()
+            self.start_time = pf_time.perf_counter()
             # Make sure the file is opened before recording anything:
             with sf.SoundFile(self.filename, mode='x', samplerate=self.samplerate,
                               channels=self.channels, subtype=self.subtype) as file:
@@ -74,9 +74,15 @@ class Recording:
                         # soundfileに書き込んでいる、writeはsoundfileのメソッド
                         # file.write(self.q.get())
                         # ハンドルのボタンが押されたら終了
-                        if self.udp_receive.is_finish_speaking(file,self.q):
-                            self.end = pf_time.perf_counter()
-                            print(self.end)
+                        # if self.udp_receive.is_finish_speaking(file,self.q):
+                        #     self.end = pf_time.perf_counter()
+                        #     print(self.end)
+                        #     raise KeyboardInterrupt
+
+                        end_time_str = self.udp_receive.test(file,self.q)
+                        if end_time_str is not None:
+                            # 型を変換
+                            self.end_time = datetime.datetime.strptime(end_time_str, '%Y/%m/%d %H:%M:%S.%f').timestamp()
                             raise KeyboardInterrupt
                         
         except KeyboardInterrupt:
@@ -91,7 +97,7 @@ class Recording:
             # 回数カラムに書き込む
             sheet.cell(row=last_row + 1, column=1, value=last_row)
             # reaction_timeカラムに書き込む
-            sheet.cell(row=last_row + 1, column=2, value=self.end-self.start)
+            sheet.cell(row=last_row + 1, column=2, value=self.end_time-self.start_time)
 
             # 保存
             wb.save(reaction_time_sheet_path)
