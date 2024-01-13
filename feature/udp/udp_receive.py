@@ -87,7 +87,35 @@ class UDPReceive():
             data=data.decode('utf-8')
 
             print('Received data: {}'.format(data))
+            # ここで複数回実行されている
             return data
+        except KeyboardInterrupt:
+            print ('\\n . . .\\n')
+            self.sock.close()
+            return None
+        except Exception as e:
+            pass
+
+    def test_finish(self):
+        try :
+            # 受信バッファを作成
+            data, cli_addr = self.sock.recvfrom(1024)
+
+            # if len(data)>=1:
+            #     data = struct.unpack('?', data)[0]
+            #     # dataのlenと中身をprintする
+            #     print('Received data: {}'.format(data))
+
+            # bool型に変換
+            data = struct.unpack('?', data)[0]
+            if data is None:
+                return False
+
+            # dataのlenと中身をprintする
+            print('Received data: {}'.format(data))
+            
+            if data:
+                return data
         except KeyboardInterrupt:
             print ('\\n . . .\\n')
             self.sock.close()
