@@ -61,7 +61,10 @@ class Recording:
                                                 suffix='.wav', dir='../sound/{}'.format(datetime.datetime.now().strftime('%Y%m%d')))
 
             beep.high()
-            self.start_time = pf_time.perf_counter()
+            # datetime型に変換
+            self.start_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S.%f')
+            self.start_time = datetime.datetime.strptime(self.start_time, '%Y/%m/%d %H:%M:%S.%f')
+
             # Make sure the file is opened before recording anything:
             with sf.SoundFile(self.filename, mode='x', samplerate=self.samplerate,
                               channels=self.channels, subtype=self.subtype) as file:
@@ -78,12 +81,28 @@ class Recording:
                         #     self.end = pf_time.perf_counter()
                         #     print(self.end)
                         #     raise KeyboardInterrupt
+                        if self.end_time == 0:
+                            end_time_str = self.udp_receive.test()
 
-                        end_time_str = self.udp_receive.test(file,self.q)
-                        if end_time_str is not None:
-                            # 型を変換
-                            self.end_time = datetime.datetime.strptime(end_time_str, '%Y/%m/%d %H:%M:%S.%f').timestamp()
-                            raise KeyboardInterrupt
+                        if end_time_str is not None and self.end_time ==0:
+                            # end_time_strをdatetime型に変換
+                            self.end_time = datetime.datetime.strptime(end_time_str, '%Y/%m/%d %H:%M:%S.%f')
+
+                            # 秒数にフォーマットしてself.end_timeとself.start_timeの差を取得
+                            dif_time=self.end_time-self.start_time
+                            # 秒数に変換
+                            dif_time=dif_time.total_seconds()
+                            print(dif_time)
+
+                        if self.end_time !=0:
+                            # ここが何か重い説？
+                            file.write(self.q.get())
+                            print(self.udp_receive.test_finish())
+                            if self.udp_receive.test_finish():
+                                raise KeyboardInterrupt
+
+                        # if self.udp_receive.is_finish_speaking(file,self.q) and self.end_time !=0:
+                        #     raise KeyboardInterrupt
                         
         except KeyboardInterrupt:
             beep.low()
@@ -98,6 +117,7 @@ class Recording:
             sheet.cell(row=last_row + 1, column=1, value=last_row)
             # reaction_timeカラムに書き込む
             sheet.cell(row=last_row + 1, column=2, value=self.end_time-self.start_time)
+            print(self.end_time-self.start_time)
 
             # 保存
             wb.save(reaction_time_sheet_path)
