@@ -8,11 +8,15 @@ import time as pf_time
 import beep
 import openpyxl
 from udp.udp_receive import UDPReceive
+import os
+from dotenv import load_dotenv
 
 import sounddevice as sd
 import soundfile as sf
 import numpy  # Make sure NumPy is loaded before it is used in the callback
 assert numpy  # avoid "imported but unused" message (W0611)
+
+load_dotenv()
 
 class Recording:
     def __init__(self, filename=None, device=None, samplerate=None, channels=1, subtype=None):
@@ -26,6 +30,7 @@ class Recording:
         self.end = 0
         self.VOLUME_THRESHOLD = 10
         self.IS_RECORDING = False
+        # self.udp_receive = UDPReceive(os.environ['MATSUKI7_IP'], 12345)
         self.udp_receive = UDPReceive('127.0.0.1', 12345)
 
     def int_or_str(self, text):
@@ -42,9 +47,8 @@ class Recording:
         self.q.put(indata.copy())
         volume = numpy.linalg.norm(indata) * 10
 
-        if volume > self.VOLUME_THRESHOLD:
-            self.IS_RECORDING = True
-            self.end = pf_time.perf_counter()
+        # if volume > self.VOLUME_THRESHOLD:
+        #     self.IS_RECORDING = True
 
     def recording_to_text(self, reaction_time_sheet_path):
         try:
@@ -71,6 +75,8 @@ class Recording:
                         # file.write(self.q.get())
                         # ハンドルのボタンが押されたら終了
                         if self.udp_receive.is_finish_speaking(file,self.q):
+                            self.end = pf_time.perf_counter()
+                            print(self.end)
                             raise KeyboardInterrupt
                         
         except KeyboardInterrupt:
