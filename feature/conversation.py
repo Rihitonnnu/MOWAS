@@ -10,7 +10,7 @@ from langchain.chat_models import ChatOpenAI
 from langchain.callbacks import get_openai_callback
 from SyntheticVoice import SyntheticVoice
 from sql import Sql
-import rec_unlimited
+from rec_unlimited import Recording
 from gpt import Gpt
 import beep
 import log_instance
@@ -38,11 +38,11 @@ class Conversation():
         self.token_record = TokenRecord()
 
         self.human_input = ""
+        self.drowsiness_flg=True
 
         template = """あなたは相手と会話をすることで覚醒維持するシステムで名前はもわすです。
         # 条件
-        - 「会話を行いながら覚醒維持を行います」、「眠くなった場合は私に眠いと伝えてください」と伝える
-        - 相手の興味のある話題で会話をする
+        - なるだけ挨拶短くする
 
         {chat_history}
         {introduce_prompt}
@@ -64,7 +64,10 @@ class Conversation():
             verbose=False
         )
 
-    def introduce(self,human_input):
+    def introduce(self,human_input,drowsiness_flg):
+        if drowsiness_flg:
+            # 眠いかどうかを聞く
+            self.confirm_drwness()
         # 眠くない場合は案内を行わない
         if not human_input=='眠いです':
             return
@@ -83,6 +86,8 @@ class Conversation():
                     {}さん、眠くなっているんですね。近くの休憩場所は{}です。この目的地まで案内しましょうか？
                     """.format(self.user_name, spot_result['display_name'])
         
+        # 眠くなっているかの確認
+        
         response = self.llm_chain.predict(
                             human_input=human_input,  introduce_prompt=self.introduce_prompt)
 
@@ -91,6 +96,7 @@ class Conversation():
         
         # 入力を受け取る
         introduce_reaction_response = input("You: ")
+        # introduce_reaction_response = Recording().recording_to_text(self.reaction_time_sheet_path)
 
         # ここでembeddingを用いて眠いか眠くないかを判定
         result=self.embedding(self.introduce_reaction_json_path,introduce_reaction_response.replace('You:',''))
@@ -104,6 +110,10 @@ class Conversation():
 
         # 再度会話をするためにhuman_inputを初期化
         self.human_input="何か話題を振ってください。"
+
+    # 眠いかどうかを聞く処理
+    def confirm_drowsiness(self):
+        self.syntheticVoice.speaking("{}さん、運転お疲れ様です。眠くなっていませんか？".format(self.user_name))
 
     def run(self):
         # ログの設定
@@ -123,7 +133,6 @@ class Conversation():
             conv_cnt = 1
 
             # 事前に入力をしておくことでMOWAS側からの応答から会話が始まる
-            # 分岐はドライバーの名前が入力されているかどうか
             response = self.llm_chain.predict(
                     human_input="こんにちは。あなたの名前は何ですか？私の名前は{}です。".format(self.user_name),  introduce_prompt=self.introduce_prompt)
             self.syntheticVoice.speaking(response.replace(
@@ -137,12 +146,17 @@ class Conversation():
         while True:
             try:
                 with get_openai_callback() as cb:
-                    # human_input = rec_unlimited.recording_to_text()
+                    # self.human_input = Recording().recording_to_text(self.reaction_time_sheet_path)
 
                     self.human_input = input("You: ")
-                    self.introduce(self.human_input)
 
-                    logger.info(self.user_name + ": " + self.human_input)
+                    # 反応時間に関する処理、ここでdrowsiness_flgを更新
+
+                    # 案内に関する処理
+                    self.introduce(self.human_input,self.drowsiness_flg)
+                    self.drowsiness_flg=False
+
+                    # logger.info(self.user_name + ": " + self.human_input)
 
                     response = self.llm_chain.predict(
                         human_input=self.human_input, summary=summary, introduce_prompt=self.introduce_prompt)
