@@ -86,51 +86,49 @@ class UDPReceive():
             # 受信バッファを作成
             data, cli_addr = self.sock.recvfrom(1024)
 
+            self.sock.settimeout(10)
+
             # dataを文字列に変換
             data=data.decode('utf-8')
 
             print('Received data: {}'.format(data))
             # ここで複数回実行されている
             return data
-        except KeyboardInterrupt:
-            print ('\\n . . .\\n')
-            self.sock.close()
-            return None
         except UnicodeDecodeError:
             print('UnicodeDecodeError')
             return None
         except Exception as e:
             pass
 
-    def test_finish(self):
-        try :
-            # 受信バッファを作成
-            data, cli_addr = self.sock.recvfrom(1024)
+    # def test_finish(self):
+    #     try :
+    #         # 受信バッファを作成
+    #         data, cli_addr = self.sock.recvfrom(1024)
 
-            data=data.decode('utf-8')
+    #         data=data.decode('utf-8')
 
-            # dataのlenと中身をprintする
-            print('Received data: {}'.format(data))
+    #         # dataのlenと中身をprintする
+    #         print('Received data: {}'.format(data))
             
-            if data=="true":
-                return True
+    #         if data=="true":
+    #             return True
             
-            if data=="false":
-                return False
+    #         if data=="false":
+    #             return False
             
-            if data is None:
-                print('data is None')
+    #         if data is None:
+    #             print('data is None')
             
-        except KeyboardInterrupt:
-            print ('\\n . . .\\n')
-            self.sock.close()
-            return None
-        except UnicodeDecodeError:
-            print('UnicodeDecodeError')
-            return False
-    # ここにエラーが発生した場合の処理を記述
-        except Exception as e:
-            pass
+    #     except KeyboardInterrupt:
+    #         print ('\\n . . .\\n')
+    #         self.sock.close()
+    #         return None
+    #     except UnicodeDecodeError:
+    #         print('UnicodeDecodeError')
+    #         return False
+    # # ここにエラーが発生した場合の処理を記述
+    #     except Exception as e:
+    #         pass
 
     def close(self):
         self.sock.close()
