@@ -18,6 +18,9 @@ from token_record import TokenRecord
 from search_spot import SearchSpot
 import place_details
 from udp.udp_receive import UDPReceive
+import rec
+import datetime
+import openpyxl
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
@@ -40,9 +43,14 @@ class Conversation():
         self.human_input = ""
         self.drowsiness_flg=True
 
+        self.start_time = None
+        self.end_time = None
+        # self.udp_receive = UDPReceive(os.environ['MATSUKI7_IP'], 12345)
+        self.udp_receive = UDPReceive('127.0.0.1', 12345)
+
         template = """あなたは相手と会話をすることで覚醒維持するシステムで名前はもわすです。
         # 条件
-        - なるだけ挨拶短くする
+        - 自分の名前、「よろしくお願いします」を言う
 
         {chat_history}
         {introduce_prompt}
@@ -67,7 +75,11 @@ class Conversation():
     def introduce(self,human_input,drowsiness_flg):
         if drowsiness_flg:
             # 眠いかどうかを聞く
-            self.confirm_drwness()
+            self.confirm_drowsiness()
+            self.human_input=input("You: ")
+
+            human_input=self.human_input
+
         # 眠くない場合は案内を行わない
         if not human_input=='眠いです':
             return
@@ -115,6 +127,23 @@ class Conversation():
     def confirm_drowsiness(self):
         self.syntheticVoice.speaking("{}さん、運転お疲れ様です。眠くなっていませんか？".format(self.user_name))
 
+    def rac_time_excel(self):
+        # excelシートを読み込む
+        wb = openpyxl.load_workbook(self.reaction_time_sheet_path)
+        sheet = wb.active
+        # 最終行を取得
+        last_row = sheet.max_row
+
+        # 回数カラムに書き込む
+        sheet.cell(row=last_row + 1, column=1, value=last_row)
+        
+        # reaction_timeカラムに書き込む
+        sheet.cell(row=last_row + 1, column=2, value=(self.end_time-self.start_time).total_seconds())
+
+        # 保存
+        wb.save(self.reaction_time_sheet_path)
+
+    # 会話の実行
     def run(self):
         # ログの設定
         logger = log_instance.log_instance('conversation')
@@ -133,11 +162,11 @@ class Conversation():
             conv_cnt = 1
 
             # 事前に入力をしておくことでMOWAS側からの応答から会話が始まる
-            response = self.llm_chain.predict(
-                    human_input="こんにちは。あなたの名前は何ですか？私の名前は{}です。".format(self.user_name),  introduce_prompt=self.introduce_prompt)
-            self.syntheticVoice.speaking(response.replace(
-                'Mowasu: ', '').replace('もわす: ', ''))
-            print(response.replace('AI: ', ''))
+            # response = self.llm_chain.predict(
+            #         human_input="こんにちは。あなたの名前は何ですか？私の名前は{}です。".format(self.user_name),  introduce_prompt=self.introduce_prompt)
+            # self.syntheticVoice.speaking(response.replace(
+            #     'Mowasu: ', '').replace('もわす: ', ''))
+            # print(response.replace('AI: ', ''))
 
             # トークンをexcelに記録
             self.token_record.token_record(cb, conv_cnt)
@@ -147,8 +176,26 @@ class Conversation():
             try:
                 with get_openai_callback() as cb:
                     # self.human_input = Recording().recording_to_text(self.reaction_time_sheet_path)
+                    # 開始時間計測開始
+                    beep.high()
+                    self.start_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S.%f')
+                    self.start_time = datetime.datetime.strptime(self.start_time, '%Y/%m/%d %H:%M:%S.%f')
 
-                    self.human_input = input("You: ")
+                    # 終了時間を受け取るまで待機
+                    while True:
+                        date=self.udp_receive.get_end_time()
+                        if date is not None:
+                            # dateを日付型に変換
+                            self.end_time=datetime.datetime.strptime(date, '%Y/%m/%d %H:%M:%S.%f')
+                            break
+
+                    # 音声認識による文字起こし
+                    self.human_input = rec.run()
+                    # self.human_input = input("You: ")
+
+                    #excelに反応時間を記録
+                    self.rac_time_excel(self.reaction_time_sheet_path)
+                    exit(1)
 
                     # 反応時間に関する処理、ここでdrowsiness_flgを更新
 
@@ -166,7 +213,9 @@ class Conversation():
 
                     logger.info(response.replace('AI: ', ''))
                     self.syntheticVoice.speaking(response.replace(
-                        'AI: ', '').replace('もわす: ', ''))
+                        'AI: ', '').replace('もわす: ', '').replace('Mowasu: ', ''))
+                    
+                    #excelに記録
             except KeyboardInterrupt:
                 # 会話の要約をDBに格納
                 # summary = Gpt().make_conversation_summary()
