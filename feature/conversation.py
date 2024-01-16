@@ -45,8 +45,8 @@ class Conversation():
 
         self.start_time = None
         self.end_time = None
-        # self.udp_receive = UDPReceive(os.environ['MATSUKI7_IP'], 12345)
-        self.udp_receive = UDPReceive('127.0.0.1', 12345)
+        self.udp_receive = UDPReceive(os.environ['MATSUKI7_IP'], 12345)
+        # self.udp_receive = UDPReceive('127.0.0.1', 12345)
 
         template = """あなたは相手と会話をすることで覚醒維持するシステムで名前はもわすです。
         # 条件
@@ -76,7 +76,8 @@ class Conversation():
         if drowsiness_flg:
             # 眠いかどうかを聞く
             self.confirm_drowsiness()
-            self.human_input=input("You: ")
+            # self.human_input=input("You: ")
+            self.human_input=rec.run()
 
             human_input=self.human_input
 
@@ -107,8 +108,8 @@ class Conversation():
             'AI: ', '').replace('もわす: ', ''))
         
         # 入力を受け取る
-        introduce_reaction_response = input("You: ")
-        # introduce_reaction_response = Recording().recording_to_text(self.reaction_time_sheet_path)
+        # introduce_reaction_response = input("You: ")
+        introduce_reaction_response = rec.run()
 
         # ここでembeddingを用いて眠いか眠くないかを判定
         result=self.embedding(self.introduce_reaction_json_path,introduce_reaction_response.replace('You:',''))
@@ -193,9 +194,10 @@ class Conversation():
                     self.human_input = rec.run()
                     # self.human_input = input("You: ")
 
+                    #Noneだった場合に眠いかどうかを聞く分岐を作成
+
                     #excelに反応時間を記録
-                    self.rac_time_excel(self.reaction_time_sheet_path)
-                    exit(1)
+                    self.rac_time_excel()
 
                     # 反応時間に関する処理、ここでdrowsiness_flgを更新
 
