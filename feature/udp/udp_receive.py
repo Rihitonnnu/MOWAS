@@ -18,15 +18,15 @@ class UDPReceive():
     def is_sleepy(self):
         try :
             # 受付待ち
-            print('Waiting data...')
             data, cli_addr = self.sock.recvfrom(1024)
             # bool型に変換
             data = struct.unpack('?', data)[0]
-
+            
             return data
         except KeyboardInterrupt:
             print ('\\n . . .\\n')
             self.sock.close()
+            exit(1)
             return None
 
     def get_coordinates(self):
@@ -122,7 +122,7 @@ class UDPReceive():
     def close(self):
         self.sock.close()
 
-udp_receive=UDPReceive(os.environ['MATSUKI7_IP'], 12345)
+# udp_receive=UDPReceive(os.environ['MATSUKI7_IP'], 12345)
 # while True:
 #     try:
 #         result=udp_receive.get_conv_start_flg()
