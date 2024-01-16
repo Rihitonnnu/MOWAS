@@ -13,7 +13,6 @@ class UDPReceive():
         self.locaddr = (host, port)
         self.sock = socket.socket(socket.AF_INET, type=socket.SOCK_DGRAM)
         self.sock.bind(self.locaddr)
-        print('create socket')
 
     def is_sleepy(self):
         try :
@@ -64,12 +63,16 @@ class UDPReceive():
             # 音声ファイルの書き込み
             file.write(q.get())
 
+            data = struct.unpack('?', data)[0]
+            # dataのlenと中身をprintする
+            print('Received data: {}'.format(data))
+            return data
             # bool型に変換
-            if len(data)>=1:
-                data = struct.unpack('?', data)[0]
-                # dataのlenと中身をprintする
-                print('Received data: {}'.format(data))
-                return data
+            # if len(data)>=1:
+            #     data = struct.unpack('?', data)[0]
+            #     # dataのlenと中身をprintする
+            #     print('Received data: {}'.format(data))
+            #     return data
         except KeyboardInterrupt:
             print ('\\n . . .\\n')
             self.sock.close()
@@ -78,7 +81,7 @@ class UDPReceive():
             pass
     
     # udpで送信された時刻を取得
-    def test(self):
+    def get_end_time(self):
         try :
             # 受信バッファを作成
             data, cli_addr = self.sock.recvfrom(1024)
@@ -93,6 +96,9 @@ class UDPReceive():
             print ('\\n . . .\\n')
             self.sock.close()
             return None
+        except UnicodeDecodeError:
+            print('UnicodeDecodeError')
+            return None
         except Exception as e:
             pass
 
@@ -101,25 +107,28 @@ class UDPReceive():
             # 受信バッファを作成
             data, cli_addr = self.sock.recvfrom(1024)
 
-            # if len(data)>=1:
-            #     data = struct.unpack('?', data)[0]
-            #     # dataのlenと中身をprintする
-            #     print('Received data: {}'.format(data))
-
-            # bool型に変換
-            data = struct.unpack('?', data)[0]
-            if data is None:
-                return False
+            data=data.decode('utf-8')
 
             # dataのlenと中身をprintする
             print('Received data: {}'.format(data))
             
-            if data:
-                return data
+            if data=="true":
+                return True
+            
+            if data=="false":
+                return False
+            
+            if data is None:
+                print('data is None')
+            
         except KeyboardInterrupt:
             print ('\\n . . .\\n')
             self.sock.close()
             return None
+        except UnicodeDecodeError:
+            print('UnicodeDecodeError')
+            return False
+    # ここにエラーが発生した場合の処理を記述
         except Exception as e:
             pass
 
@@ -130,10 +139,13 @@ class UDPReceive():
 # while True:
 #     if udp_receive.is_finish_speaking():
 #         break
+# udp_receive=UDPReceive('127.0.0.1', 12345)
+# test=udp_receive.test_finish()
+# print(test)
 
 # データを受け取るまでループする、データを受け取ったらループを抜ける
 # while True:
-#     date=UDPReceive('127.0.0.1', 12345).test()
+#     date=UDPReceive('127.0.0.1', 12345).get_end_time()
 
 #     if date is not None:
 #         # dateを日付型に変換
