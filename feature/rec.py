@@ -7,8 +7,11 @@ def run():
     try:
         with sr.Microphone() as source:
             voice = listener.listen(source)
-            voice_text = listener.recognize_google(voice,language="ja-JP")
+            human_input = listener.recognize_google(voice,language="ja-JP")
             beep.low()
-            print(voice_text)
+            print(human_input)
+            return human_input
     except:
         print('聞き取れませんでした')
+        return None
+
