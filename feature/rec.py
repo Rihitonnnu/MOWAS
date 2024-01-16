@@ -6,7 +6,6 @@ listener = sr.Recognizer()
 def run():
     try:
         with sr.Microphone() as source:
-            beep.high()
             voice = listener.listen(source)
             voice_text = listener.recognize_google(voice,language="ja-JP")
             beep.low()
