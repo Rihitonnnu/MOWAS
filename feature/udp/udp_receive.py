@@ -4,6 +4,7 @@ import errno
 import struct
 import os
 from dotenv import load_dotenv
+import ast
 load_dotenv()
 
 class UDPReceive():
@@ -50,29 +51,19 @@ class UDPReceive():
             self.sock.close()
             return None
     
-    def is_finish_speaking(self,file,q):
+    def get_conv_start_flg(self):
         try :
             # 受信バッファを作成
-            buffer = bytearray(1024)
-            # 受信
-            nbytes, cli_addr = self.sock.recvfrom_into(buffer)
+            data, cli_addr = self.sock.recvfrom(1024)
+            self.sock.settimeout(10)
 
-            # nbytesバイトのデータを取得
-            data = buffer[:nbytes]
+            # dataを文字列に変換
+            data=data.decode('utf-8')
             
-            # 音声ファイルの書き込み
-            file.write(q.get())
-
-            data = struct.unpack('?', data)[0]
-            # dataのlenと中身をprintする
             print('Received data: {}'.format(data))
+            data = ast.literal_eval(data)
+            
             return data
-            # bool型に変換
-            # if len(data)>=1:
-            #     data = struct.unpack('?', data)[0]
-            #     # dataのlenと中身をprintする
-            #     print('Received data: {}'.format(data))
-            #     return data
         except KeyboardInterrupt:
             print ('\\n . . .\\n')
             self.sock.close()
@@ -85,7 +76,6 @@ class UDPReceive():
         try :
             # 受信バッファを作成
             data, cli_addr = self.sock.recvfrom(1024)
-
             self.sock.settimeout(10)
 
             # dataを文字列に変換
@@ -95,7 +85,6 @@ class UDPReceive():
             # ここで複数回実行されている
             return data
         except UnicodeDecodeError:
-            print('UnicodeDecodeError')
             return None
         except Exception as e:
             pass
@@ -133,9 +122,12 @@ class UDPReceive():
     def close(self):
         self.sock.close()
 
-# udp_receive=UDPReceive(os.environ['MATSUKI7_IP'], 12345)
+udp_receive=UDPReceive(os.environ['MATSUKI7_IP'], 12345)
 # while True:
-#     if udp_receive.is_finish_speaking():
+#     try:
+#         result=udp_receive.get_conv_start_flg()
+#         print(result)
+#     except KeyboardInterrupt:
 #         break
 # udp_receive=UDPReceive('127.0.0.1', 12345)
 # test=udp_receive.test_finish()
