@@ -82,7 +82,7 @@ class Conversation():
             human_input=self.human_input
 
         # 眠くない場合は案内を行わない
-        if not human_input=='眠いです':
+        if not human_input=='眠いです' or not human_input=='眠たいです':
             return
         
         # 現在の緯度経度を取得する
@@ -127,6 +127,7 @@ class Conversation():
     # 眠いかどうかを聞く処理
     def confirm_drowsiness(self):
         self.syntheticVoice.speaking("{}さん、運転お疲れ様です。眠くなっていませんか？".format(self.user_name))
+        print("{}さん、運転お疲れ様です。眠くなっていませんか？".format(self.user_name))
 
     def rac_time_excel(self):
         # excelシートを読み込む
@@ -134,13 +135,10 @@ class Conversation():
         sheet = wb.active
         # 最終行を取得
         last_row = sheet.max_row
-
         # 回数カラムに書き込む
         sheet.cell(row=last_row + 1, column=1, value=last_row)
-        
         # reaction_timeカラムに書き込む
         sheet.cell(row=last_row + 1, column=2, value=(self.end_time-self.start_time).total_seconds())
-
         # 保存
         wb.save(self.reaction_time_sheet_path)
 
@@ -163,11 +161,11 @@ class Conversation():
             conv_cnt = 1
 
             # 事前に入力をしておくことでMOWAS側からの応答から会話が始まる
-            # response = self.llm_chain.predict(
-            #         human_input="こんにちは。あなたの名前は何ですか？私の名前は{}です。".format(self.user_name),  introduce_prompt=self.introduce_prompt)
-            # self.syntheticVoice.speaking(response.replace(
-            #     'Mowasu: ', '').replace('もわす: ', ''))
-            # print(response.replace('AI: ', ''))
+            response = self.llm_chain.predict(
+                    human_input="こんにちは。あなたの名前は何ですか？私の名前は{}です。".format(self.user_name),  introduce_prompt=self.introduce_prompt)
+            self.syntheticVoice.speaking(response.replace(
+                'Mowasu: ', '').replace('もわす: ', ''))
+            print(response.replace('AI: ', ''))
 
             # トークンをexcelに記録
             self.token_record.token_record(cb, conv_cnt)
@@ -178,9 +176,9 @@ class Conversation():
                 with get_openai_callback() as cb:
                     # self.human_input = Recording().recording_to_text(self.reaction_time_sheet_path)
                     # 開始時間計測開始
-                    beep.high()
                     self.start_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S.%f')
                     self.start_time = datetime.datetime.strptime(self.start_time, '%Y/%m/%d %H:%M:%S.%f')
+                    beep.high()
 
                     # 終了時間を受け取るまで待機
                     while True:
@@ -189,12 +187,14 @@ class Conversation():
                             # dateを日付型に変換
                             self.end_time=datetime.datetime.strptime(date, '%Y/%m/%d %H:%M:%S.%f')
                             break
-
+                    print((self.end_time-self.start_time).total_seconds())
                     # 音声認識による文字起こし
                     self.human_input = rec.run()
                     # self.human_input = input("You: ")
 
                     #Noneだった場合に眠いかどうかを聞く分岐を作成
+                    if self.human_input is None:
+                        self.introduce(self.human_input,self.drowsiness_flg)
 
                     #excelに反応時間を記録
                     self.rac_time_excel()
