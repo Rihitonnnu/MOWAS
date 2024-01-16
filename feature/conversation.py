@@ -10,8 +10,6 @@ from langchain.chat_models import ChatOpenAI
 from langchain.callbacks import get_openai_callback
 from SyntheticVoice import SyntheticVoice
 from sql import Sql
-from rec_unlimited import Recording
-from gpt import Gpt
 import beep
 import log_instance
 from token_record import TokenRecord
