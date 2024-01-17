@@ -25,6 +25,10 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 # conversation()をclassにする
 class Conversation():
     def __init__(self,reaction_time_sheet_path):
+        # 会話の処理開始時間を取得
+        self.conv_start_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S.%f')
+        self.conv_start_time = datetime.datetime.strptime(self.conv_start_time, '%Y/%m/%d %H:%M:%S.%f')
+
         self.reaction_time_sheet_path=reaction_time_sheet_path
         # jsonのパスを設定
         self.sleepy_json_path='json/embedding/is_sleepy.json'
@@ -64,7 +68,7 @@ class Conversation():
             k=3, memory_key="chat_history", input_key="human_input")
 
         self.llm_chain = LLMChain(
-            llm=ChatOpenAI(temperature=0),
+            llm=ChatOpenAI(temperature=0.5),
             prompt=prompt,
             memory=memory,
             verbose=False
@@ -74,17 +78,31 @@ class Conversation():
         if drowsiness_flg:
             # 眠いかどうかを聞く
             self.confirm_drowsiness()
-            # self.human_input=input("You: ")
+
+            # 開始時間計測開始
+            self.start_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S.%f')
+            self.start_time = datetime.datetime.strptime(self.start_time, '%Y/%m/%d %H:%M:%S.%f')
+            beep.high()
+            # 反応時間計測
+            while True:
+                date=None
+                date=self.udp_receive.get_end_time()
+                if date is not None:
+                    # dateを日付型に変換
+                    self.end_time=datetime.datetime.strptime(date, '%Y/%m/%d %H:%M:%S.%f')
+                    break
+
             self.human_input=rec.run()
+            # self.human_input=input("You: ")
 
             human_input=self.human_input
 
         # 眠くない場合は案内を行わない
-        if not human_input=='眠いです' or not human_input=='眠たいです':
+        if not human_input=='眠いです':
             return
         
         # 現在の緯度経度を取得する
-        coordinates_results=UDPReceive(os.environ['MATSUKI7_IP'],12345).get_coordinates()
+        coordinates_results=self.udp_receive.get_coordinates()
 
         spot_result = SearchSpot().search_spot(coordinates_results[0],coordinates_results[1])
         
@@ -107,6 +125,20 @@ class Conversation():
         
         # 入力を受け取る
         # introduce_reaction_response = input("You: ")
+
+        # 開始時間計測開始
+        self.start_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S.%f')
+        self.start_time = datetime.datetime.strptime(self.start_time, '%Y/%m/%d %H:%M:%S.%f')
+        beep.high()
+
+        while True:
+                date=None
+                date=self.udp_receive.get_end_time()
+                if date is not None:
+                    # dateを日付型に変換
+                    self.end_time=datetime.datetime.strptime(date, '%Y/%m/%d %H:%M:%S.%f')
+                    break
+
         introduce_reaction_response = rec.run()
 
         # ここでembeddingを用いて眠いか眠くないかを判定
@@ -138,6 +170,9 @@ class Conversation():
         sheet.cell(row=last_row + 1, column=1, value=last_row)
         # reaction_timeカラムに書き込む
         sheet.cell(row=last_row + 1, column=2, value=(self.end_time-self.start_time).total_seconds())
+        # measurement_timeにself.conv_start_timeとself.end_timeの差分を%M:%s形式で書き込む
+        # sheet.cell(row=last_row + 1, column=3, value=(self.conv_start_time-self.end_time))
+
         # 保存
         wb.save(self.reaction_time_sheet_path)
 
@@ -188,19 +223,20 @@ class Conversation():
                             break
                     print((self.end_time-self.start_time).total_seconds())
 
-                    # 録音開始ボタンが押されるまで待機
-                    while True:
-                        if self.udp_receive.get_rec_start_flg():
-                            break
+                    # # 録音開始ボタンが押されるまで待機
+                    # while True:
+                    #     if self.udp_receive.get_rec_start_flg():
+                    #         break
 
                     # 音声認識による文字起こし
                     self.human_input = rec.run()
                     # self.human_input = input("You: ")
-                    print(self.human_input)
+
 
                     #Noneだった場合に眠いかどうかを聞く分岐を作成
                     if self.human_input is None:
                         self.introduce(self.human_input,self.drowsiness_flg)
+                        self.drowsiness_flg=False
 
                     #excelに反応時間を記録
                     self.rac_time_excel()
