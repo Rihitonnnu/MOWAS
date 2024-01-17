@@ -127,6 +127,7 @@ class Conversation():
         self.syntheticVoice.speaking("{}さん、運転お疲れ様です。眠くなっていませんか？".format(self.user_name))
         print("{}さん、運転お疲れ様です。眠くなっていませんか？".format(self.user_name))
 
+    # excelに反応時間を記録する関数
     def rac_time_excel(self):
         # excelシートを読み込む
         wb = openpyxl.load_workbook(self.reaction_time_sheet_path)
@@ -186,9 +187,16 @@ class Conversation():
                             self.end_time=datetime.datetime.strptime(date, '%Y/%m/%d %H:%M:%S.%f')
                             break
                     print((self.end_time-self.start_time).total_seconds())
+
+                    # 録音開始ボタンが押されるまで待機
+                    while True:
+                        if self.udp_receive.get_rec_start_flg():
+                            break
+
                     # 音声認識による文字起こし
                     self.human_input = rec.run()
                     # self.human_input = input("You: ")
+                    print(self.human_input)
 
                     #Noneだった場合に眠いかどうかを聞く分岐を作成
                     if self.human_input is None:
@@ -214,8 +222,6 @@ class Conversation():
                     logger.info(response.replace('AI: ', ''))
                     self.syntheticVoice.speaking(response.replace(
                         'AI: ', '').replace('もわす: ', '').replace('Mowasu: ', ''))
-                    
-                    #excelに記録
             except KeyboardInterrupt:
                 # 会話の要約をDBに格納
                 # summary = Gpt().make_conversation_summary()
