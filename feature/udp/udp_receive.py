@@ -1,6 +1,5 @@
 import socket
 import datetime
-import errno
 import struct
 import os
 from dotenv import load_dotenv
@@ -109,29 +108,3 @@ class UDPReceive():
 
     def close(self):
         self.sock.close()
-
-# udp_receive=UDPReceive(os.environ['MATSUKI7_IP'], 12345)
-# while True:
-#     try:
-#         result=udp_receive.get_conv_start_flg()
-#         print(result)
-#     except KeyboardInterrupt:
-#         break
-# udp_receive=UDPReceive('127.0.0.1', 12345)
-# test=udp_receive.test_finish()
-# print(test)
-
-# データを受け取るまでループする、データを受け取ったらループを抜ける
-# while True:
-#     date=UDPReceive('127.0.0.1', 12345).get_end_time()
-
-#     if date is not None:
-#         # dateを日付型に変換
-#         result=datetime.datetime.strptime(date, '%Y/%m/%d %H:%M:%S.%f')
-
-#         # resultの%fを削除
-#         result=result.strftime('%Y/%m/%d %H:%M:%S')
-#         print(result)
-#         break
-
-
