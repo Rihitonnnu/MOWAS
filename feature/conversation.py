@@ -16,7 +16,7 @@ from token_record import TokenRecord
 from search_spot import SearchSpot
 import place_details
 from udp.udp_receive import UDPReceive
-from conversation_options import ConversationOptions
+from excel_operations import ExcelOperations
 import rec
 import datetime
 import openpyxl
@@ -31,7 +31,6 @@ class Conversation():
         self.conv_start_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S.%f')
         self.conv_start_time = datetime.datetime.strptime(self.conv_start_time, '%Y/%m/%d %H:%M:%S.%f')
 
-        self.reaction_time_sheet_path=reaction_time_sheet_path
         # jsonのパスを設定
         self.sleepy_json_path='json/embedding/is_sleepy.json'
         self.introduce_reaction_json_path='json/embedding/introduce_reaction.json'
@@ -49,8 +48,7 @@ class Conversation():
         # トークンを記録するクラスの初期化
         self.token_record = TokenRecord()
 
-        # ConversationOptionsの初期化
-        self.conversation_options = ConversationOptions()
+        self.excel_operations=ExcelOperations(reaction_time_sheet_path)
 
         self.human_input = ""
         self.drowsiness_flg=True
@@ -84,6 +82,11 @@ class Conversation():
             verbose=False
         )
 
+    # 眠いかどうかを聞く処理
+    def confirm_drowsiness(self):
+        self.syntheticVoice.speaking("{}さん、運転お疲れ様です。眠くなっていませんか？".format(self.user_name))
+        print("{}さん、運転お疲れ様です。眠くなっていませんか？".format(self.user_name))
+
     # 案内を行う
     def introduce(self,human_input,drowsiness_flg):
         if drowsiness_flg:
@@ -104,7 +107,7 @@ class Conversation():
                     break
 
             self.human_input=rec.run()
-            self.rac_time_excel()
+            self.excel_operations.rac_time_excel()
 
             # self.human_input=input("You: ")
 
@@ -153,7 +156,7 @@ class Conversation():
                     break
 
         introduce_reaction_response = rec.run()
-        self.rac_time_excel()
+        self.excel_operations.time_excel()
 
         # ここでembeddingを用いて眠いか眠くないかを判定
         result=self.embedding(self.introduce_reaction_json_path,introduce_reaction_response.replace('You:',''))
@@ -167,23 +170,6 @@ class Conversation():
 
         # 再度会話をするためにhuman_inputを初期化
         self.human_input="何か話題を振ってください。"
-
-    # excelに反応時間を記録する関数
-    def rac_time_excel(self):
-        # excelシートを読み込む
-        wb = openpyxl.load_workbook(self.reaction_time_sheet_path)
-        sheet = wb.active
-        # 最終行を取得
-        last_row = sheet.max_row
-        # 回数カラムに書き込む
-        sheet.cell(row=last_row + 1, column=1, value=last_row)
-        # reaction_timeカラムに書き込む
-        sheet.cell(row=last_row + 1, column=2, value=(self.end_time-self.start_time).total_seconds())
-        # measurement_timeにself.conv_start_timeとself.end_timeの差分を%M:%s形式で書き込む
-        # sheet.cell(row=last_row + 1, column=3, value=(self.conv_start_time-self.end_time))
-
-        # 保存
-        wb.save(self.reaction_time_sheet_path)
 
     # 会話の実行
     def run(self):
@@ -240,7 +226,7 @@ class Conversation():
                         self.drowsiness_flg=False
 
                     #excelに反応時間を記録
-                    self.rac_time_excel()
+                    self.excel_operations.rac_time_excel()
 
                     # 反応時間に関する処理、ここでdrowsiness_flgを更新
 
