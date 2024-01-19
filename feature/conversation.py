@@ -81,7 +81,7 @@ class Conversation():
             verbose=False
         )
 
-    # 眠いかどうかを聞く処理
+    # 眠いかどうかを聞く
     def confirm_drowsiness(self):
         self.syntheticVoice.speaking("{}さん、運転お疲れ様です。眠くなっていませんか？".format(self.user_name))
         print("{}さん、運転お疲れ様です。眠くなっていませんか？".format(self.user_name))
@@ -155,7 +155,7 @@ class Conversation():
                     break
 
         introduce_reaction_response = rec.run()
-        self.excel_operations.time_excel()
+        self.excel_operations.rac_time_excel()
 
         # ここでembeddingを用いて眠いか眠くないかを判定
         result=self.embedding(self.introduce_reaction_json_path,introduce_reaction_response.replace('You:',''))
