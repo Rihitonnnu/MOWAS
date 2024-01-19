@@ -20,7 +20,6 @@ class UDPReceive():
             data, cli_addr = self.sock.recvfrom(1024)
             # bool型に変換
             data = struct.unpack('?', data)[0]
-            
             return data
         except KeyboardInterrupt:
             print ('\\n . . .\\n')
@@ -80,10 +79,10 @@ class UDPReceive():
 
             # dataを文字列に変換
             data=data.decode('utf-8')
+            reaction_time=datetime.datetime.now()
+            print('Received data: {}'.format(reaction_time))
 
-            print('Received data: {}'.format(data))
-            # ここで複数回実行されている
-            return data
+            return reaction_time
         except UnicodeDecodeError:
             return None
         except Exception as e:
