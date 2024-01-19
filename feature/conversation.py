@@ -19,7 +19,6 @@ from udp.udp_receive import UDPReceive
 from excel_operations import ExcelOperations
 import rec
 import datetime
-import openpyxl
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
