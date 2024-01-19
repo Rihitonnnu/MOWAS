@@ -79,7 +79,7 @@ class UDPReceive():
 
             # dataを文字列に変換
             data=data.decode('utf-8')
-            reaction_time=datetime.datetime.now()
+            reaction_time=datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S.%f')
             print('Received data: {}'.format(reaction_time))
 
             return reaction_time
