@@ -9,6 +9,7 @@ import beep
 import openpyxl
 from udp.udp_receive import UDPReceive
 import os
+import asyncio
 from dotenv import load_dotenv
 
 import sounddevice as sd
@@ -30,8 +31,9 @@ class Recording:
         self.end_time = 0
         self.VOLUME_THRESHOLD = 10
         self.IS_RECORDING = False
-        # self.udp_receive = UDPReceive(os.environ['MATSUKI7_IP'], 12345)
-        self.udp_receive = UDPReceive('127.0.0.1', 12345)
+        self.udp_receive = UDPReceive(os.environ['MATSUKI7_IP'], 12345)
+        # self.udp_receive = UDPReceive('127.0.0.1', 12345)
+        self.flg=False
 
     def int_or_str(self, text):
         """Helper function for argument parsing."""
@@ -45,6 +47,7 @@ class Recording:
         if status:
             print(status, file=sys.stderr)
         self.q.put(indata.copy())
+        print('1')
         volume = numpy.linalg.norm(indata) * 10
 
         # if volume > self.VOLUME_THRESHOLD:
@@ -75,38 +78,40 @@ class Recording:
                     print('#' * 80)
                     while True:
                         # soundfileに書き込んでいる、writeはsoundfileのメソッド
-                        # file.write(self.q.get())
                         # ハンドルのボタンが押されたら終了
-                        # if self.udp_receive.is_finish_speaking(file,self.q):
-                        #     self.end = pf_time.perf_counter()
-                        #     print(self.end)
-                        #     raise KeyboardInterrupt
-                        if self.end_time == 0:
-                            end_time_str = self.udp_receive.test()
+                        if self.udp_receive.is_finish_speaking(file,self.q):
+                            self.end_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S.%f')
+                            self.end_time=datetime.datetime.strptime(self.end_time, '%Y/%m/%d %H:%M:%S.%f')
+                            raise KeyboardInterrupt
+                        # if self.end_time == 0:
+                        #     end_time_str = self.udp_receive.test()
 
-                        if end_time_str is not None and self.end_time ==0:
-                            # end_time_strをdatetime型に変換
-                            self.end_time = datetime.datetime.strptime(end_time_str, '%Y/%m/%d %H:%M:%S.%f')
+                        # if end_time_str is not None and self.end_time ==0:
+                        #     # end_time_strをdatetime型に変換
+                        #     self.end_time = datetime.datetime.strptime(end_time_str, '%Y/%m/%d %H:%M:%S.%f')
 
-                            # 秒数にフォーマットしてself.end_timeとself.start_timeの差を取得
-                            dif_time=self.end_time-self.start_time
-                            # 秒数に変換
-                            dif_time=dif_time.total_seconds()
-                            print(dif_time)
+                        # if self.end_time != 0:
+                        #     self.flg = self.udp_receive.test_finish()
+                        #     file.write(self.q.get())
+                        #     print('2')
+                        #     if self.flg:
+                        #         raise KeyboardInterrupt
 
-                        if self.end_time !=0:
-                            # ここが何か重い説？
-                            file.write(self.q.get())
-                            print(self.udp_receive.test_finish())
-                            if self.udp_receive.test_finish():
-                                raise KeyboardInterrupt
-
-                        # if self.udp_receive.is_finish_speaking(file,self.q) and self.end_time !=0:
-                        #     raise KeyboardInterrupt
+                        # if self.end_time != 0:
+                        #     self.flg=self.udp_receive.test_finish()
+                        #     file.write(self.q.get())
+                        #     if self.flg:
+                        #         raise KeyboardInterrupt
+                            
+                            
+                        # if self.end_time != 0:
+                        #     # file.write(self.q.get())
+                        #     flg=self.udp_receive.test_finish()
+                        #     if flg:
+                        #         raise KeyboardInterrupt
                         
         except KeyboardInterrupt:
             beep.low()
-
             # excelシートを読み込む
             wb = openpyxl.load_workbook(reaction_time_sheet_path)
             sheet = wb.active
@@ -115,9 +120,9 @@ class Recording:
 
             # 回数カラムに書き込む
             sheet.cell(row=last_row + 1, column=1, value=last_row)
+            
             # reaction_timeカラムに書き込む
-            sheet.cell(row=last_row + 1, column=2, value=self.end_time-self.start_time)
-            print(self.end_time-self.start_time)
+            sheet.cell(row=last_row + 1, column=2, value=(self.end_time-self.start_time).total_seconds())
 
             # 保存
             wb.save(reaction_time_sheet_path)
