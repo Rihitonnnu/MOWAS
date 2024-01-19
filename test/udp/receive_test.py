@@ -1,4 +1,7 @@
 import socket
+from dotenv import load_dotenv
+load_dotenv()
+import os
 
 def udp_server(server_ip, server_port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -15,4 +18,4 @@ def udp_server(server_ip, server_port):
     except KeyboardInterrupt:
         print("Server is shutting down")
 
-udp_server('', 12345)
+udp_server(os.environ['MATSUKI7_IP'], 12345)
