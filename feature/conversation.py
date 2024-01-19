@@ -16,6 +16,7 @@ from token_record import TokenRecord
 from search_spot import SearchSpot
 import place_details
 from udp.udp_receive import UDPReceive
+from conversation_options import ConversationOptions
 import rec
 import datetime
 import openpyxl
@@ -25,6 +26,7 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 # conversation()をclassにする
 class Conversation():
     def __init__(self,reaction_time_sheet_path):
+
         # 会話の処理開始時間を取得
         self.conv_start_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S.%f')
         self.conv_start_time = datetime.datetime.strptime(self.conv_start_time, '%Y/%m/%d %H:%M:%S.%f')
@@ -39,8 +41,16 @@ class Conversation():
                         SELECT  name 
                         FROM    users
                         ''')
+        
+        # 音声文字起こしの初期化
         self.syntheticVoice = SyntheticVoice()
+        self.syntheticVoice.speaking("会話を開始します。")
+
+        # トークンを記録するクラスの初期化
         self.token_record = TokenRecord()
+
+        # ConversationOptionsの初期化
+        self.conversation_options = ConversationOptions()
 
         self.human_input = ""
         self.drowsiness_flg=True
@@ -74,10 +84,11 @@ class Conversation():
             verbose=False
         )
 
+    # 案内を行う
     def introduce(self,human_input,drowsiness_flg):
         if drowsiness_flg:
             # 眠いかどうかを聞く
-            self.confirm_drowsiness()
+            self.conversation_options.confirm_drowsiness()
 
             # 開始時間計測開始
             self.start_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S.%f')
@@ -157,11 +168,6 @@ class Conversation():
         # 再度会話をするためにhuman_inputを初期化
         self.human_input="何か話題を振ってください。"
 
-    # 眠いかどうかを聞く処理
-    def confirm_drowsiness(self):
-        self.syntheticVoice.speaking("{}さん、運転お疲れ様です。眠くなっていませんか？".format(self.user_name))
-        print("{}さん、運転お疲れ様です。眠くなっていませんか？".format(self.user_name))
-
     # excelに反応時間を記録する関数
     def rac_time_excel(self):
         # excelシートを読み込む
@@ -219,8 +225,9 @@ class Conversation():
 
                     # 終了時間を受け取るまで待機
                     while True:
-                        self.end_time=self.udp_receive.get_end_time()
-                        if self.end_time is not None:
+                        tmp_time=self.udp_receive.get_end_time()
+                        if tmp_time is not None:
+                            self.end_time=datetime.datetime.strptime(tmp_time, '%Y/%m/%d %H:%M:%S.%f')
                             break
 
                     # 音声認識による文字起こし
