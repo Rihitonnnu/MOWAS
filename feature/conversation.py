@@ -93,6 +93,8 @@ class Conversation():
                     break
 
             self.human_input=rec.run()
+            self.rac_time_excel()
+
             # self.human_input=input("You: ")
 
             human_input=self.human_input
@@ -140,6 +142,7 @@ class Conversation():
                     break
 
         introduce_reaction_response = rec.run()
+        self.rac_time_excel()
 
         # ここでembeddingを用いて眠いか眠くないかを判定
         result=self.embedding(self.introduce_reaction_json_path,introduce_reaction_response.replace('You:',''))
@@ -216,22 +219,13 @@ class Conversation():
 
                     # 終了時間を受け取るまで待機
                     while True:
-                        date=self.udp_receive.get_end_time()
-                        if date is not None:
-                            # dateを日付型に変換
-                            self.end_time=datetime.datetime.strptime(date, '%Y/%m/%d %H:%M:%S.%f')
+                        self.end_time=self.udp_receive.get_end_time()
+                        if self.end_time is not None:
                             break
-                    print((self.end_time-self.start_time).total_seconds())
-
-                    # # 録音開始ボタンが押されるまで待機
-                    # while True:
-                    #     if self.udp_receive.get_rec_start_flg():
-                    #         break
 
                     # 音声認識による文字起こし
                     self.human_input = rec.run()
                     # self.human_input = input("You: ")
-
 
                     #Noneだった場合に眠いかどうかを聞く分岐を作成
                     if self.human_input is None:
