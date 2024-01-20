@@ -75,7 +75,7 @@ class UDPReceive():
         try :
             # 受信バッファを作成
             data, cli_addr = self.sock.recvfrom(1024)
-            self.sock.settimeout(10)
+            self.sock.settimeout(70)
 
             # dataを文字列に変換
             data=data.decode('utf-8')
