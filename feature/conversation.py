@@ -62,9 +62,9 @@ class Conversation():
         self.end_time = None
         self.udp_receive = UDPReceive(os.environ['MATSUKI7_IP'], 12345)
 
-        template = """あなたは相手と会話をすることで覚醒維持するシステムで名前はもわすです。
-        # 条件
-        - 自分の名前、「よろしくお願いします」を言う
+        template = """あなたは会話をすることで覚醒維持するシステムで名前はもわすです。
+        # 会話条件
+        - 「映画」、「趣味」、「好みの食べ物」の中からランダムに話題を振ってください。
 
         {chat_history}
         {introduce_prompt}
@@ -89,9 +89,9 @@ class Conversation():
     # 反応時間計測
     def rac_time_measure(self):
         # 開始時間の取得及び変換
+        beep.high()
         self.start_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S.%f')
         self.start_time = datetime.datetime.strptime(self.start_time, '%Y/%m/%d %H:%M:%S.%f')
-        beep.high()
 
         while True:
             date=None
@@ -109,13 +109,13 @@ class Conversation():
     # 眠くなっている場合案内を行う
     def introduce(self,human_input,drowsiness_flg):
         if drowsiness_flg:
-            self.conversation_options.confirm_drowsiness()
+            self.confirm_drowsiness()
 
             # 反応時間計測
             self.rac_time_measure()
 
             self.human_input=self.rec.run()
-            self.excel_operations.rac_time_excel()
+            self.excel_operations.rac_time_excel(self.start_time,self.end_time)
 
             # self.human_input=input("You: ")
 
@@ -153,7 +153,7 @@ class Conversation():
         self.rac_time_measure()
 
         introduce_reaction_response = self.rec.run()
-        self.excel_operations.rac_time_excel()
+        self.excel_operations.rac_time_excel(self.start_time,self.end_time)
 
         # ここでembeddingを用いて眠いか眠くないかを判定
         result=self.embedding(self.introduce_reaction_json_path,introduce_reaction_response.replace('You:',''))
@@ -167,7 +167,7 @@ class Conversation():
         self.introduce_prompt = """"""
 
         # 会話を続行するためにhuman_inputを初期化
-        self.human_input="何か話題を振ってください。"
+        self.human_input="「映画」、「趣味」、「好みの食べ物」の中からあなたが一つ選んで話題を振ってください。"
 
     # 会話の実行
     def run(self):
@@ -196,7 +196,6 @@ class Conversation():
 
             # トークンをexcelに記録
             self.token_record.token_record(cb, conv_cnt)
-            conv_cnt += 1
 
         while True:
             try:
@@ -215,13 +214,15 @@ class Conversation():
                         self.drowsiness_flg=False
 
                     # excelに反応時間を記録
-                    self.excel_operations.rac_time_excel()
-
-                    # 反応時間に関する処理、drowsiness_flgを更新
-                    self.drowsiness_flg=self.question_judge.run()
+                    self.excel_operations.rac_time_excel(self.start_time,self.end_time)
+                    
+                    if conv_cnt!=1:
+                        # 反応時間に関する処理、drowsiness_flgを更新
+                        self.drowsiness_flg=self.question_judge.run()
 
                     # 案内に関する処理
-                    self.introduce(self.human_input,self.drowsiness_flg)
+                    # self.introduce(self.human_input,self.drowsiness_flg)
+                    self.introduce(self.human_input,False)
                     self.drowsiness_flg=False
 
                     # logger.info(self.user_name + ": " + self.human_input)
