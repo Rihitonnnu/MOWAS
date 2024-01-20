@@ -17,6 +17,7 @@ from search_spot import SearchSpot
 import place_details
 from udp.udp_receive import UDPReceive
 from excel_operations import ExcelOperations
+from question_judge import QuestionJudge
 import rec
 import datetime
 
@@ -49,13 +50,15 @@ class Conversation():
 
         self.excel_operations=ExcelOperations(reaction_time_sheet_path)
 
+        # 運転者の発話した内容
         self.human_input = ""
+
+        # 眠いかどうかを判定するフラグ
         self.drowsiness_flg=True
 
         self.start_time = None
         self.end_time = None
         self.udp_receive = UDPReceive(os.environ['MATSUKI7_IP'], 12345)
-        # self.udp_receive = UDPReceive('127.0.0.1', 12345)
 
         template = """あなたは相手と会話をすることで覚醒維持するシステムで名前はもわすです。
         # 条件
@@ -80,30 +83,34 @@ class Conversation():
             memory=memory,
             verbose=False
         )
+    
+    # 反応時間計測
+    def rac_time_measure(self):
+        # 開始時間の取得及び変換
+        self.start_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S.%f')
+        self.start_time = datetime.datetime.strptime(self.start_time, '%Y/%m/%d %H:%M:%S.%f')
+        beep.high()
+
+        while True:
+            date=None
+            date=self.udp_receive.get_end_time()
+            if date is not None:
+                # dateを日付型に変換
+                self.end_time=datetime.datetime.strptime(date, '%Y/%m/%d %H:%M:%S.%f')
+                break
 
     # 眠いかどうかを聞く
     def confirm_drowsiness(self):
         self.syntheticVoice.speaking("{}さん、運転お疲れ様です。眠くなっていませんか？".format(self.user_name))
         print("{}さん、運転お疲れ様です。眠くなっていませんか？".format(self.user_name))
 
-    # 案内を行う
+    # 眠くなっている場合案内を行う
     def introduce(self,human_input,drowsiness_flg):
         if drowsiness_flg:
-            # 眠いかどうかを聞く
             self.conversation_options.confirm_drowsiness()
 
-            # 開始時間計測開始
-            self.start_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S.%f')
-            self.start_time = datetime.datetime.strptime(self.start_time, '%Y/%m/%d %H:%M:%S.%f')
-            beep.high()
             # 反応時間計測
-            while True:
-                date=None
-                date=self.udp_receive.get_end_time()
-                if date is not None:
-                    # dateを日付型に変換
-                    self.end_time=datetime.datetime.strptime(date, '%Y/%m/%d %H:%M:%S.%f')
-                    break
+            self.rac_time_measure()
 
             self.human_input=rec.run()
             self.excel_operations.rac_time_excel()
@@ -119,8 +126,10 @@ class Conversation():
         # 現在の緯度経度を取得する
         coordinates_results=self.udp_receive.get_coordinates()
 
+        # 現在地から近い休憩場所を検索
         spot_result = SearchSpot().search_spot(coordinates_results[0],coordinates_results[1])
         
+        # 取得したスポットのURLを取得
         spot_url = place_details.place_details(
             spot_result['place_id'])
 
@@ -129,8 +138,6 @@ class Conversation():
                     # 案内文言
                     {}さん、眠くなっているんですね。近くの休憩場所は{}です。この目的地まで案内しましょうか？
                     """.format(self.user_name, spot_result['display_name'])
-        
-        # 眠くなっているかの確認
         
         response = self.llm_chain.predict(
                             human_input=human_input,  introduce_prompt=self.introduce_prompt)
@@ -141,18 +148,7 @@ class Conversation():
         # 入力を受け取る
         # introduce_reaction_response = input("You: ")
 
-        # 開始時間計測開始
-        self.start_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S.%f')
-        self.start_time = datetime.datetime.strptime(self.start_time, '%Y/%m/%d %H:%M:%S.%f')
-        beep.high()
-
-        while True:
-                date=None
-                date=self.udp_receive.get_end_time()
-                if date is not None:
-                    # dateを日付型に変換
-                    self.end_time=datetime.datetime.strptime(date, '%Y/%m/%d %H:%M:%S.%f')
-                    break
+        self.rac_time_measure()
 
         introduce_reaction_response = rec.run()
         self.excel_operations.rac_time_excel()
@@ -163,11 +159,12 @@ class Conversation():
         if result:
             # 休憩所のurlをメールで送信
             place_details.send_email(spot_url)
-            self.syntheticVoice.speaking("了解しました。休憩場所のマップURLをメールで送信しましたので確認してください。到着まで引き続き会話を続けます。")
+            self.syntheticVoice.speaking("了解しました。休憩場所のマップURLをメールで送信しましたので確認してください。ハンドルの受諾ボタンを押してください。到着まで引き続き会話を続けます。")
 
+        # 案内プロンプトを初期化
         self.introduce_prompt = """"""
 
-        # 再度会話をするためにhuman_inputを初期化
+        # 会話を続行するためにhuman_inputを初期化
         self.human_input="何か話題を振ってください。"
 
     # 会話の実行
@@ -203,31 +200,22 @@ class Conversation():
             try:
                 with get_openai_callback() as cb:
                     # self.human_input = Recording().recording_to_text(self.reaction_time_sheet_path)
-                    # 開始時間計測開始
-                    self.start_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S.%f')
-                    self.start_time = datetime.datetime.strptime(self.start_time, '%Y/%m/%d %H:%M:%S.%f')
-                    beep.high()
-
-                    # 終了時間を受け取るまで待機
-                    while True:
-                        tmp_time=self.udp_receive.get_end_time()
-                        if tmp_time is not None:
-                            self.end_time=datetime.datetime.strptime(tmp_time, '%Y/%m/%d %H:%M:%S.%f')
-                            break
+                    self.rac_time_measure()
 
                     # 音声認識による文字起こし
                     self.human_input = rec.run()
                     # self.human_input = input("You: ")
 
-                    #Noneだった場合に眠いかどうかを聞く分岐を作成
+                    # Noneだった場合に眠いかどうかを聞く分岐を作成
                     if self.human_input is None:
                         self.introduce(self.human_input,self.drowsiness_flg)
                         self.drowsiness_flg=False
 
-                    #excelに反応時間を記録
+                    # excelに反応時間を記録
                     self.excel_operations.rac_time_excel()
 
                     # 反応時間に関する処理、ここでdrowsiness_flgを更新
+                    self.drowsiness_flg=QuestionJudge().run()
 
                     # 案内に関する処理
                     self.introduce(self.human_input,self.drowsiness_flg)
