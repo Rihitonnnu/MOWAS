@@ -29,5 +29,5 @@ class QuestionJudge:
         
         return False
 
-result=QuestionJudge('../data/reaction_time/20240119/kawanishi/165732.xlsx').run()
-print(result)
+# result=QuestionJudge('../data/reaction_time/20240119/kawanishi/165732.xlsx').run()
+# print(result)
