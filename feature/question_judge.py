@@ -16,10 +16,15 @@ class QuestionJudge:
             self.threshold_judge_cnt+=1
     
     # 眠くなっている可能性がある場合はTrueを返す
-    def run(self):
+    def run(self,conv_cnt):
         # reaction_timeの平均値を取得
         # print(self.df['reaction_time'].mean())
         self.threshold_judge()
+        # しきい値を超えた回数を表示
+        print(self.threshold_judge_cnt)
+
+        if conv_cnt==1:
+            return True
 
         # 累計3回以上しきい値を超えていたら眠くなっている可能性があると判断
         if self.threshold_judge_cnt>=3:
