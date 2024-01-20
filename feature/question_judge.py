@@ -4,13 +4,12 @@ import pandas as pd
 class QuestionJudge:
     def __init__(self,reaction_time_sheet_path):
         self.reaction_time_sheet_path = reaction_time_sheet_path
-
-        # excelファイルを読み込む
-        self.df = pd.read_excel(self.reaction_time_sheet_path, sheet_name='Sheet')
         self.threshold_judge_cnt=0
     
     # しきい値
     def threshold_judge(self):
+        # excelファイルを読み込む
+        self.df = pd.read_excel(self.reaction_time_sheet_path, sheet_name='Sheet')
         # excelファイルの最終行のreaction_timeを取得
         reaction_time = self.df['reaction_time'].iloc[-1]
         if reaction_time>1.5:
