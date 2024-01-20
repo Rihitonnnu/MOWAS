@@ -18,7 +18,7 @@ import place_details
 from udp.udp_receive import UDPReceive
 from excel_operations import ExcelOperations
 from question_judge import QuestionJudge
-import rec
+from rec import Rec
 import datetime
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
@@ -26,7 +26,6 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 # conversation()をclassにする
 class Conversation():
     def __init__(self,reaction_time_sheet_path):
-
         # 会話の処理開始時間を取得
         self.conv_start_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S.%f')
         self.conv_start_time = datetime.datetime.strptime(self.conv_start_time, '%Y/%m/%d %H:%M:%S.%f')
@@ -49,6 +48,9 @@ class Conversation():
         self.token_record = TokenRecord()
 
         self.excel_operations=ExcelOperations(reaction_time_sheet_path)
+        self.question_judge=QuestionJudge(reaction_time_sheet_path)
+
+        self.rec=Rec()     
 
         # 運転者の発話した内容
         self.human_input = ""
@@ -112,7 +114,7 @@ class Conversation():
             # 反応時間計測
             self.rac_time_measure()
 
-            self.human_input=rec.run()
+            self.human_input=self.rec.run()
             self.excel_operations.rac_time_excel()
 
             # self.human_input=input("You: ")
@@ -150,7 +152,7 @@ class Conversation():
 
         self.rac_time_measure()
 
-        introduce_reaction_response = rec.run()
+        introduce_reaction_response = self.rec.run()
         self.excel_operations.rac_time_excel()
 
         # ここでembeddingを用いて眠いか眠くないかを判定
@@ -203,19 +205,20 @@ class Conversation():
                     self.rac_time_measure()
 
                     # 音声認識による文字起こし
-                    self.human_input = rec.run()
+                    self.human_input = self.rec.run()
                     # self.human_input = input("You: ")
 
                     # Noneだった場合に眠いかどうかを聞く分岐を作成
                     if self.human_input is None:
+                        self.drowsiness_flg=True
                         self.introduce(self.human_input,self.drowsiness_flg)
                         self.drowsiness_flg=False
 
                     # excelに反応時間を記録
                     self.excel_operations.rac_time_excel()
 
-                    # 反応時間に関する処理、ここでdrowsiness_flgを更新
-                    self.drowsiness_flg=QuestionJudge().run()
+                    # 反応時間に関する処理、drowsiness_flgを更新
+                    self.drowsiness_flg=self.question_judge.run()
 
                     # 案内に関する処理
                     self.introduce(self.human_input,self.drowsiness_flg)
