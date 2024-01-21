@@ -36,16 +36,21 @@ sheet = wb.active
 sheet['A1'] = 'num'
 # reaction_timeカラムをexcelで作成
 sheet['B1'] = 'reaction_time'
+sheet['C1'] = 'measurement_time'
+sheet['D1'] = 'guide_acc_time'
 reaction_time_sheet_path='../data/reaction_time/{}/{}/{}.xlsx'.format(ymd,name,hms)
 wb.save(reaction_time_sheet_path)
 
 # 眠くなりかけるまで待機
-# while True:
-#     is_sleepy=udp.udp_receive.UDPReceive(os.environ['MATSUKI7_IP'],12345).is_sleepy()
-#     print(is_sleepy)
-#     if is_sleepy:
-#         # beep音を鳴らす
-#         beep.high()
-#         break
+while True:
+    try:
+        is_sleepy=udp.udp_receive.UDPReceive(os.environ['MATSUKI7_IP'],12345).is_sleepy()
+        print(is_sleepy)
+        if is_sleepy:
+            # beep音を鳴らす
+            beep.high()
+            break
+    except Exception as e:
+        pass
 
 Conversation(reaction_time_sheet_path).run()
