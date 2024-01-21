@@ -29,8 +29,8 @@ class ExcelOperations:
         wb = openpyxl.load_workbook(self.reaction_time_sheet_path)
         sheet = wb.active
 
-        guide_acc_time=datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S.%f')
-        guide_acc_time=datetime.datetime.strptime(guide_acc_time,'%Y/%m/%d %H:%M:%S.%f')
+        guide_acc_time=datetime.now().strftime('%Y/%m/%d %H:%M:%S.%f')
+        guide_acc_time=datetime.strptime(guide_acc_time,'%Y/%m/%d %H:%M:%S.%f')
         # 回数カラムに書き込む
         sheet.cell(row=2, column=4, value=guide_acc_time-conv_start_time)
         # 保存
