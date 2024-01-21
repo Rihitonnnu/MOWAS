@@ -57,6 +57,8 @@ class Conversation():
 
         # 眠いかどうかを判定するフラグ
         self.drowsiness_flg=True
+        # 案内を行ったかについてのフラグ
+        self.introduce_flg=False
 
         # 会話回数を初期化
         self.conv_cnt=1
@@ -178,7 +180,8 @@ class Conversation():
         self.introduce_prompt = """"""
 
         # 案内受容時間を記録
-        self.guide_acc_time_excel(self.conv_start_time)
+        self.excel_operations.guide_acc_time_excel(self.conv_start_time)
+        self.introduce_flg=True
 
         # 会話を続行するためにhuman_inputを初期化
         self.human_input="何か話題を振ってください。"
@@ -216,11 +219,14 @@ class Conversation():
                     self.rac_time_measure()
 
                     # 音声認識による文字起こし
-                    self.human_input = self.rec.run()
+                    for _ in range(2):
+                        self.human_input = self.rec.run()
+                        if isinstance(self.human_input,str):
+                            break
                     # self.human_input = input("You: ")
 
                     # Noneだった場合に眠いかどうかを聞く分岐を作成
-                    if self.human_input is None:
+                    if self.human_input is None and self.introduce_flg==False:
                         self.drowsiness_flg=True
                         self.introduce(self.human_input,self.drowsiness_flg)
                         self.drowsiness_flg=False
@@ -234,9 +240,10 @@ class Conversation():
                     self.token_record.token_record(cb, self.conv_cnt)
                     self.conv_cnt += 1
 
-                    # 案内に関する処理
-                    self.introduce(self.human_input,self.drowsiness_flg)
-                    self.drowsiness_flg=False
+                    if self.introduce_flg==False:
+                        # 案内に関する処理
+                        self.introduce(self.human_input,self.drowsiness_flg)
+                        self.drowsiness_flg=False
 
                     # logger.info(self.user_name + ": " + self.human_input)
 
