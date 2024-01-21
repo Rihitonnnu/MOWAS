@@ -12,18 +12,18 @@ class Rec:
         for _ in range(2):
             try:
                 with sr.Microphone() as source:
+                    print('聞き取り中...')
                     # beep.high()
                     voice = listener.listen(source)
                     human_input = listener.recognize_google(voice,language="ja-JP")
                     beep.low()
                     print(human_input)
-                    return human_input
             except:
                 print('聞き取れませんでした')
                 self.rec_cnt+=1
 
                 if self.rec_cnt<2:
-                    SyntheticVoice().speaking('すみません、聞き取れませんでした。ビープ音の後にもう一度お願いします。')
+                    # SyntheticVoice().speaking('すみません、聞き取れませんでした。ビープ音の後にもう一度お願いします。')
                     self.rec_cnt+=1
                     beep.high()
                 else:
@@ -32,4 +32,6 @@ class Rec:
             else:
                 break
 
+        return human_input
+        
 Rec().run()
