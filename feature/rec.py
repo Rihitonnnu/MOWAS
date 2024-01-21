@@ -9,29 +9,24 @@ class Rec:
         self.rec_cnt=0
 
     def run(self):
-        for _ in range(2):
-            try:
-                with sr.Microphone() as source:
-                    print('聞き取り中...')
-                    # beep.high()
-                    voice = listener.listen(source)
-                    human_input = listener.recognize_google(voice,language="ja-JP")
-                    beep.low()
-                    print(human_input)
-            except:
-                print('聞き取れませんでした')
+        try:
+            with sr.Microphone() as source:
+                print('聞き取り中...')
+                voice = listener.listen(source)
+                human_input = listener.recognize_google(voice,language="ja-JP")
+                beep.low()
+                print(human_input)
+                return human_input
+        except:
+            print('聞き取れませんでした')
+            self.rec_cnt+=1
+
+            if self.rec_cnt<3:
+                SyntheticVoice().speaking('すみません、聞き取れませんでした。ビープ音の後にもう一度お願いします。')
                 self.rec_cnt+=1
-
-                if self.rec_cnt<2:
-                    # SyntheticVoice().speaking('すみません、聞き取れませんでした。ビープ音の後にもう一度お願いします。')
-                    self.rec_cnt+=1
-                    beep.high()
-                else:
-                    return None
-            
+                beep.high()
+                return False
             else:
-                break
-
-        return human_input
+                return None
         
-Rec().run()
+# Rec().run()
