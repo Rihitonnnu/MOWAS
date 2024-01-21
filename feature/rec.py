@@ -23,7 +23,7 @@ class Rec:
                 self.rec_cnt+=1
 
                 if self.rec_cnt<2:
-                    # SyntheticVoice().speaking('すみません、聞き取れませんでした。ビープ音の後にもう一度お願いします。')
+                    SyntheticVoice().speaking('すみません、聞き取れませんでした。ビープ音の後にもう一度お願いします。')
                     self.rec_cnt+=1
                     beep.high()
                 else:
@@ -32,4 +32,4 @@ class Rec:
             else:
                 break
 
-# Rec().run()
+Rec().run()
