@@ -19,6 +19,7 @@ from udp.udp_receive import UDPReceive
 from excel_operations import ExcelOperations
 from question_judge import QuestionJudge
 from rec import Rec
+from gpt import Gpt
 import datetime
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
@@ -203,11 +204,11 @@ class Conversation():
         with get_openai_callback() as cb:
 
             # 事前に入力をしておくことでMOWAS側からの応答から会話が始まる
-            # response = self.llm_chain.predict(
-            #         human_input="こんにちは。あなたの名前は何ですか？私の名前は{}です。".format(self.user_name),  introduce_prompt=self.introduce_prompt)
-            # self.syntheticVoice.speaking(response.replace(
-            #     'Mowasu: ', '').replace('もわす: ', ''))
-            # print(response.replace('AI: ', ''))
+            response = self.llm_chain.predict(
+                    human_input="こんにちは。あなたの名前は何ですか？私の名前は{}です。".format(self.user_name),  introduce_prompt=self.introduce_prompt)
+            self.syntheticVoice.speaking(response.replace(
+                'Mowasu: ', '').replace('もわす: ', ''))
+            print(response.replace('AI: ', ''))
 
             # トークンをexcelに記録
             self.token_record.token_record(cb, self.conv_cnt)
@@ -255,9 +256,9 @@ class Conversation():
                         'AI: ', '').replace('もわす: ', '').replace('Mowasu: ', ''))
             except KeyboardInterrupt:
                 # 会話の要約をDBに格納
-                # summary = Gpt().make_conversation_summary()
-                # Sql().store_conversation_summary(summary)
-                # Sql().store_conversation()
+                summary = Gpt().make_conversation_summary()
+                Sql().store_conversation_summary(summary)
+                Sql().store_conversation()
 
                 beep.high()
                 exit(1)
