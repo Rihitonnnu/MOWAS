@@ -119,13 +119,11 @@ class Conversation():
             self.rac_time_measure()
 
             self.human_input=self.rec.run()
-            self.excel_operations.rac_time_excel(self.start_time,self.end_time)
+            # self.human_input=input("You: ")
+            self.excel_operations.rac_time_excel(self.start_time,self.end_time,self.conv_start_time)
 
             # 反応時間をもとに眠気についての質問を行うか判定
             self.drowsiness_flg=self.question_judge.run(self.conv_cnt)
-
-            # self.human_input=input("You: ")
-
             human_input=self.human_input
 
         # 眠くない場合は案内を行わない
@@ -153,16 +151,15 @@ class Conversation():
 
         self.syntheticVoice.speaking(response.replace(
             'AI: ', '').replace('もわす: ', ''))
-        
-        # 入力を受け取る
-        # introduce_reaction_response = input("You: ")
 
         # 反応時間計測
         self.rac_time_measure()
         # 音声認識による文字起こし
         introduce_reaction_response = self.rec.run()
+        # 入力を受け取る
+        # introduce_reaction_response = input("You: ")
         # excelに反応時間を記録
-        self.excel_operations.rac_time_excel(self.start_time,self.end_time)
+        self.excel_operations.rac_time_excel(self.start_time,self.end_time,self.conv_start_time)
         # 反応時間をもとに眠気についての質問を行うか判定
         self.drowsiness_flg=self.question_judge.run(self.conv_cnt)
 
@@ -179,6 +176,9 @@ class Conversation():
 
         # 会話を続行するためにhuman_inputを初期化
         self.human_input="何か話題を振ってください。"
+
+        # 案内受容時間を取得
+
 
     # 会話の実行
     def run(self):
@@ -223,8 +223,8 @@ class Conversation():
                         self.drowsiness_flg=False
 
                     # excelに反応時間を記録
-                    self.excel_operations.rac_time_excel(self.start_time,self.end_time)
-                    
+                    self.excel_operations.rac_time_excel(self.start_time,self.end_time,self.conv_start_time)
+
                     # 反応時間をもとに眠気についての質問を行うか判定
                     self.drowsiness_flg=self.question_judge.run(self.conv_cnt)
 
