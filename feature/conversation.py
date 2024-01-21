@@ -108,7 +108,6 @@ class Conversation():
     def confirm_drowsiness(self):
         self.syntheticVoice.speaking("{}さん、運転お疲れ様です。眠くなっていませんか？".format(self.user_name))
         print("{}さん、運転お疲れ様です。眠くなっていませんか？".format(self.user_name))
-
     # 眠くなっている場合案内を行う
     def introduce(self,human_input,drowsiness_flg):
         if drowsiness_flg:
@@ -121,6 +120,8 @@ class Conversation():
             self.human_input=self.rec.run()
             # self.human_input=input("You: ")
             self.excel_operations.rac_time_excel(self.start_time,self.end_time,self.conv_start_time)
+
+            self.conv_cnt+=1
 
             # 反応時間をもとに眠気についての質問を行うか判定
             self.drowsiness_flg=self.question_judge.run(self.conv_cnt)
@@ -160,6 +161,8 @@ class Conversation():
         # introduce_reaction_response = input("You: ")
         # excelに反応時間を記録
         self.excel_operations.rac_time_excel(self.start_time,self.end_time,self.conv_start_time)
+
+        self.conv_cnt+=1
         # 反応時間をもとに眠気についての質問を行うか判定
         self.drowsiness_flg=self.question_judge.run(self.conv_cnt)
 
@@ -174,11 +177,11 @@ class Conversation():
         # 案内プロンプトを初期化
         self.introduce_prompt = """"""
 
+        # 案内受容時間を記録
+        self.guide_acc_time_excel(self.conv_start_time)
+
         # 会話を続行するためにhuman_inputを初期化
         self.human_input="何か話題を振ってください。"
-
-        # 案内受容時間を取得
-
 
     # 会話の実行
     def run(self):
@@ -197,11 +200,11 @@ class Conversation():
         with get_openai_callback() as cb:
 
             # 事前に入力をしておくことでMOWAS側からの応答から会話が始まる
-            response = self.llm_chain.predict(
-                    human_input="こんにちは。あなたの名前は何ですか？私の名前は{}です。".format(self.user_name),  introduce_prompt=self.introduce_prompt)
-            self.syntheticVoice.speaking(response.replace(
-                'Mowasu: ', '').replace('もわす: ', ''))
-            print(response.replace('AI: ', ''))
+            # response = self.llm_chain.predict(
+            #         human_input="こんにちは。あなたの名前は何ですか？私の名前は{}です。".format(self.user_name),  introduce_prompt=self.introduce_prompt)
+            # self.syntheticVoice.speaking(response.replace(
+            #     'Mowasu: ', '').replace('もわす: ', ''))
+            # print(response.replace('AI: ', ''))
 
             # トークンをexcelに記録
             self.token_record.token_record(cb, self.conv_cnt)
@@ -228,6 +231,9 @@ class Conversation():
                     # 反応時間をもとに眠気についての質問を行うか判定
                     self.drowsiness_flg=self.question_judge.run(self.conv_cnt)
 
+                    self.token_record.token_record(cb, self.conv_cnt)
+                    self.conv_cnt += 1
+
                     # 案内に関する処理
                     self.introduce(self.human_input,self.drowsiness_flg)
                     self.drowsiness_flg=False
@@ -236,9 +242,6 @@ class Conversation():
 
                     response = self.llm_chain.predict(
                         human_input=self.human_input, summary=summary, introduce_prompt=self.introduce_prompt)
-
-                    self.token_record.token_record(cb, self.conv_cnt)
-                    self.conv_cnt += 1
 
                     logger.info(response.replace('AI: ', ''))
                     self.syntheticVoice.speaking(response.replace(
