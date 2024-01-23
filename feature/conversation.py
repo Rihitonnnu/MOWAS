@@ -256,8 +256,8 @@ class Conversation():
                         'AI: ', '').replace('もわす: ', '').replace('Mowasu: ', ''))
             except KeyboardInterrupt:
                 # 会話の要約をDBに格納
-                summary = Gpt().make_conversation_summary()
-                Sql().store_conversation_summary(summary)
+                # summary = Gpt().make_conversation_summary()
+                # Sql().store_conversation_summary(summary)
                 Sql().store_conversation()
 
                 beep.high()
