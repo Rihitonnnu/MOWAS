@@ -79,33 +79,13 @@ class Recording:
                     while True:
                         # soundfileに書き込んでいる、writeはsoundfileのメソッド
                         # ハンドルのボタンが押されたら終了
-                        if self.udp_receive.is_finish_speaking(file,self.q):
-                            self.end_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S.%f')
-                            self.end_time=datetime.datetime.strptime(self.end_time, '%Y/%m/%d %H:%M:%S.%f')
-                            raise KeyboardInterrupt
-                        # if self.end_time == 0:
-                        #     end_time_str = self.udp_receive.test()
-
-                        # if end_time_str is not None and self.end_time ==0:
-                        #     # end_time_strをdatetime型に変換
-                        #     self.end_time = datetime.datetime.strptime(end_time_str, '%Y/%m/%d %H:%M:%S.%f')
-
-                        # if self.end_time != 0:
-                        #     self.flg = self.udp_receive.test_finish()
-                        #     file.write(self.q.get())
-                        #     print('2')
-                        #     if self.flg:
-                        #         raise KeyboardInterrupt
-
-                        # if self.end_time != 0:
-                        #     self.flg=self.udp_receive.test_finish()
-                        #     file.write(self.q.get())
-                        #     if self.flg:
-                        #         raise KeyboardInterrupt
+                        # if self.udp_receive.is_finish_speaking(file,self.q):
+                        #     self.end_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S.%f')
+                        #     self.end_time=datetime.datetime.strptime(self.end_time, '%Y/%m/%d %H:%M:%S.%f')
+                        #     raise KeyboardInterrupt
                             
-                            
+                        file.write(self.q.get())
                         # if self.end_time != 0:
-                        #     # file.write(self.q.get())
                         #     flg=self.udp_receive.test_finish()
                         #     if flg:
                         #         raise KeyboardInterrupt
@@ -132,3 +112,5 @@ class Recording:
             return text
         except Exception as e:
             print(e)
+
+Recording().recording_to_text('../data/reaction_time/20240119/kawanishi/165732.xlsx')
