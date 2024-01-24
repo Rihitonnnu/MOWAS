@@ -195,7 +195,7 @@ class Conversation():
         # 環境変数読み込み
         load_dotenv()
 
-        # SQLクエリ設定
+        # 名前を取得するSQLクエリ設定
         summary = Sql().select('''
                         SELECT  summary 
                         FROM    users
