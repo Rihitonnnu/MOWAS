@@ -24,7 +24,6 @@ class Rec:
             if self.rec_cnt<3:
                 SyntheticVoice().speaking('すみません、聞き取れませんでした。ビープ音の後にもう一度お願いします。')
                 self.rec_cnt+=1
-                beep.high()
                 return False
             else:
                 return None
