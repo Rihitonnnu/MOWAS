@@ -111,6 +111,7 @@ class Conversation():
     def confirm_drowsiness(self):
         self.syntheticVoice.speaking("{}さん、運転お疲れ様です。眠くなっていませんか？".format(self.user_name))
         print("{}さん、運転お疲れ様です。眠くなっていませんか？".format(self.user_name))
+
     # 眠くなっている場合案内を行う
     def introduce(self,human_input,drowsiness_flg):
         if drowsiness_flg:
@@ -161,7 +162,7 @@ class Conversation():
         # 音声認識による文字起こし
         introduce_reaction_response = self.rec.run()
         # introduce_reaction_response = input("You: ")
-        
+
         # excelに反応時間を記録
         self.excel_operations.rac_time_excel(self.start_time,self.end_time,self.conv_start_time)
 
@@ -201,23 +202,22 @@ class Conversation():
                         FROM    users
                         ''')
 
-        # with get_openai_callback() as cb:
+        with get_openai_callback() as cb:
 
             # 事前に入力をしておくことでMOWAS側からの応答から会話が始まる
-            # response = self.llm_chain.predict(
-            #         human_input="こんにちは。あなたの名前は何ですか？私の名前は{}です。".format(self.user_name),  introduce_prompt=self.introduce_prompt)
+            response = self.llm_chain.predict(
+                    human_input="こんにちは。あなたの名前は何ですか？私の名前は{}です。".format(self.user_name),  introduce_prompt=self.introduce_prompt)
+            
             # self.syntheticVoice.speaking(response.replace(
             #     'Mowasu: ', '').replace('もわす: ', ''))
             # print(response.replace('AI: ', ''))
-
+            self.syntheticVoice.speaking("こんにちは。私の名前はもわすです。よろしくお願いします。{}さん、眠くなっていませんか？".format(self.user_name))
 
             # トークンをexcelに記録
-            # self.token_record.token_record(cb, self.conv_cnt)
-
+            self.token_record.token_record(cb, self.conv_cnt)
         while True:
             try:
                 with get_openai_callback() as cb:
-                    self.syntheticVoice.speaking("こんにちは。私の名前はもわすです。よろしくお願いします。{}さん、眠くなっていませんか？".format(self.user_name))
 
                     # 反応時間計測
                     self.rac_time_measure()
