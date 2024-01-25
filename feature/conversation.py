@@ -57,7 +57,7 @@ class Conversation():
         self.human_input = ""
 
         # 眠いかどうかを判定するフラグ
-        self.drowsiness_flg=True
+        self.drowsiness_flg=False
         # 案内を行ったかについてのフラグ
         self.introduce_flg=False
 
@@ -70,7 +70,7 @@ class Conversation():
 
         template = """あなたは会話をすることで覚醒維持するシステムで名前はもわすです。
         # 会話条件
-        - 話題を振ってと言われたら「映画」、「趣味」、「好みの食べ物」の中からランダムに話題を振ってください。
+        - 「映画」、「趣味」、「好みの食べ物」の中からランダムに話題を振ってください。
 
         {chat_history}
         {introduce_prompt}
@@ -160,8 +160,8 @@ class Conversation():
         self.rac_time_measure()
         # 音声認識による文字起こし
         introduce_reaction_response = self.rec.run()
-        # 入力を受け取る
         # introduce_reaction_response = input("You: ")
+        
         # excelに反応時間を記録
         self.excel_operations.rac_time_excel(self.start_time,self.end_time,self.conv_start_time)
 
@@ -201,22 +201,25 @@ class Conversation():
                         FROM    users
                         ''')
 
-        with get_openai_callback() as cb:
+        # with get_openai_callback() as cb:
 
             # 事前に入力をしておくことでMOWAS側からの応答から会話が始まる
-            response = self.llm_chain.predict(
-                    human_input="こんにちは。あなたの名前は何ですか？私の名前は{}です。".format(self.user_name),  introduce_prompt=self.introduce_prompt)
-            self.syntheticVoice.speaking(response.replace(
-                'Mowasu: ', '').replace('もわす: ', ''))
-            print(response.replace('AI: ', ''))
+            # response = self.llm_chain.predict(
+            #         human_input="こんにちは。あなたの名前は何ですか？私の名前は{}です。".format(self.user_name),  introduce_prompt=self.introduce_prompt)
+            # self.syntheticVoice.speaking(response.replace(
+            #     'Mowasu: ', '').replace('もわす: ', ''))
+            # print(response.replace('AI: ', ''))
+
 
             # トークンをexcelに記録
-            self.token_record.token_record(cb, self.conv_cnt)
+            # self.token_record.token_record(cb, self.conv_cnt)
 
         while True:
             try:
                 with get_openai_callback() as cb:
-                    # self.human_input = Recording().recording_to_text(self.reaction_time_sheet_path)
+                    self.syntheticVoice.speaking("こんにちは。私の名前はもわすです。よろしくお願いします。{}さん、眠くなっていませんか？".format(self.user_name))
+
+                    # 反応時間計測
                     self.rac_time_measure()
 
                     # 音声認識による文字起こし
@@ -226,7 +229,7 @@ class Conversation():
                             break
                     # self.human_input = input("You: ")
 
-                    # Noneだった場合に眠いかどうかを聞く分岐を作成
+                    # 会話内容が帰ってこなかった場合に眠いかどうかを聞く分岐を作成
                     if self.human_input is None and self.introduce_flg==False:
                         self.drowsiness_flg=True
                         self.introduce(self.human_input,self.drowsiness_flg)
@@ -241,12 +244,11 @@ class Conversation():
                     self.token_record.token_record(cb, self.conv_cnt)
                     self.conv_cnt += 1
 
+                    # 未案内時の場合
                     if self.introduce_flg==False:
                         # 案内に関する処理
                         self.introduce(self.human_input,self.drowsiness_flg)
                         self.drowsiness_flg=False
-
-                    # logger.info(self.user_name + ": " + self.human_input)
 
                     response = self.llm_chain.predict(
                         human_input=self.human_input, summary=summary, introduce_prompt=self.introduce_prompt)
@@ -311,5 +313,4 @@ class Conversation():
             }
         
         # 眠ければTrue、眠くなければFalseを返す
-        # print(result[results[0]["body"]])
         return result[results[0]["body"]]
