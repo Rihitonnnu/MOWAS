@@ -23,6 +23,9 @@ class QuestionJudge:
         # しきい値を超えた回数を表示
         print(self.threshold_judge_cnt)
 
+        if conv_cnt==0:
+            return True
+
         # 累計3回以上しきい値を超えていたら眠くなっている可能性があると判断
         if self.threshold_judge_cnt>=3:
             self.threshold_judge_cnt=0
