@@ -220,10 +220,10 @@ class Conversation():
                 with get_openai_callback() as cb:
 
                     # 反応時間計測
-                    self.rac_time_measure()
 
                     # 音声認識による文字起こし
                     for _ in range(2):
+                        self.rac_time_measure()
                         self.human_input = self.rec.run()
                         if isinstance(self.human_input,str):
                             break

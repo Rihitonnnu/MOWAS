@@ -1,7 +1,7 @@
 
 from conversation import Conversation
 import os
-# import view.option_window
+import view.option_window
 import udp.udp_receive
 import openpyxl
 import datetime
@@ -13,7 +13,7 @@ ymd=now.strftime('%Y%m%d')
 hms=now.strftime('%H%M%S')
 
 # 名前を入力
-name='kawanishi'
+name='kumamoto'
 
 # ディレクトリやファイル作成
 # try:
