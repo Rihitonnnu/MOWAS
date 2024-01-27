@@ -81,19 +81,49 @@ class Conversation():
         ### 運転者の入力
         Human: {human_input}
         """
-        
+
         prompt = PromptTemplate(
             input_variables=["chat_history", "human_input", "introduce_prompt"], template=template
         )
 
+        template_sleepiness_decision = """
+        以下の対応するテキストから眠いか眠くないかを判定し、結果を出力してください。
+        眠気に関する単語が入力されなかった場合は、結果をFalseとしてください。
+
+        テキスト1: 眠たいです。
+        結果: True
+
+        テキスト2: 眠くないです
+        結果: False
+
+        テキスト3: 眠くなりかけています。
+        結果: True
+
+        テキスト4:  OpenAIは、テキストの理解と生成が非常に得意な最先端の言語モデルを学習させました。
+        結果: False
+
+        テキスト5: {human_input}
+        結果: 
+        """
+
+        prompt_sleepiness_decision=PromptTemplate(
+            input_variables=["human_input"], template=template_sleepiness_decision
+        )
+
         # 記憶するmemoryの設定
         memory = ConversationBufferWindowMemory(
-            k=3, memory_key="chat_history", input_key="human_input")
+            k=1, memory_key="chat_history", input_key="human_input")
 
         self.llm_chain = LLMChain(
             llm=ChatOpenAI(temperature=0.5),
             prompt=prompt,
             memory=memory,
+            verbose=False
+        )
+
+        self.ll_chain_sleepiness_decision=LLMChain(
+            llm=ChatOpenAI(temperature=0),
+            prompt=prompt_sleepiness_decision,
             verbose=False
         )
     
@@ -135,9 +165,12 @@ class Conversation():
             # 反応時間をもとに眠気についての質問を行うか判定
             self.drowsiness_flg=self.question_judge.run(self.conv_cnt)
             human_input=self.human_input
-
+        
         # 眠くない場合は案内を行わない
-        if not human_input=='眠いです':
+        sleepiness_decisition=self.ll_chain_sleepiness_decision.predict(
+                human_input=human_input)
+        
+        if sleepiness_decisition=="False":
             return
         
         # 現在の緯度経度を取得する
@@ -208,6 +241,10 @@ class Conversation():
                         ''')
 
         with get_openai_callback() as cb:
+            # response = self.ll_chain_sleepiness_decision.predict(
+            #     human_input="大丈夫です")   
+            # print(response.replace('AI: ', ''))
+            # exit(1) 
 
             # 事前に入力をしておくことでMOWAS側からの応答から会話が始まる
             response = self.llm_chain.predict(
