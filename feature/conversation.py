@@ -99,6 +99,9 @@ class Conversation():
         テキスト3: 眠くなりかけています。
         結果: True
 
+        テキスト6: 少し眠いかもしれません。
+        結果: True
+
         テキスト4:  OpenAIは、テキストの理解と生成が非常に得意な最先端の言語モデルを学習させました。
         結果: False
 
@@ -167,10 +170,12 @@ class Conversation():
             human_input=self.human_input
         
         # 眠くない場合は案内を行わない
-        sleepiness_decisition=self.ll_chain_sleepiness_decision.predict(
-                human_input=human_input)
+        # sleepiness_decisition=self.ll_chain_sleepiness_decision.predict(
+        #         human_input=human_input)
         
-        if sleepiness_decisition=="False":
+        # if sleepiness_decisition=="False":
+        #     return
+        if not human_input == "眠いです" :
             return
         
         # 現在の緯度経度を取得する
@@ -241,10 +246,6 @@ class Conversation():
                         ''')
 
         with get_openai_callback() as cb:
-            # response = self.ll_chain_sleepiness_decision.predict(
-            #     human_input="大丈夫です")   
-            # print(response.replace('AI: ', ''))
-            # exit(1) 
 
             # 事前に入力をしておくことでMOWAS側からの応答から会話が始まる
             response = self.llm_chain.predict(
