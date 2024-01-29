@@ -39,7 +39,7 @@ class SearchSpot:
                         "latitude": lat,
                         "longitude": lon
                     },
-                    "radius": 500.0
+                    "radius": 5000.0
                 }
             },
             "rankPreference": "DISTANCE",
