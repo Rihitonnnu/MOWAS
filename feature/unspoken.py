@@ -33,12 +33,12 @@ class Unspoken:
         while True:
             try:
                 # 30秒から60秒の間で乱数を生成
-                random_time=random.randint(30,60)
+                random_time=random.randint(1,2)
                 # random_timeの秒数分待機
                 time.sleep(random_time)
                 
                 self.rac_time_measure()
-                self.excel_operations.rac_time_excel(self.start_time,self.end_time)
+                self.excel_operations.rac_time_excel(self.start_time,self.end_time,None)
             except Exception as e:
                 print(e)
                 exit(1)
