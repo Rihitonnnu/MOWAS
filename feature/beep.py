@@ -10,5 +10,4 @@ def low():
 
 
 def error():
-    winsound.Beep(1000, 200)
-    winsound.Beep(1000, 200)
+    winsound.Beep(1000, 130)

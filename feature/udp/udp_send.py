@@ -3,7 +3,6 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-
 def udp_client(message, server_ip, server_port):
     while True:
         try:
@@ -15,5 +14,5 @@ def udp_client(message, server_ip, server_port):
         except Exception as e:
             break
 
-udp_client("Hello, Server!", '127.0.0.1', 12345)
-# udp_client("Hello, Server!", os.environ["SCHOOL_MACHINE_IP"], 12345)
+# udp_client("Hello, Server!", '127.0.0.1', 12345)
+udp_client("Hello, Server!", os.environ["MATSUKI7_IP"], 12345)
