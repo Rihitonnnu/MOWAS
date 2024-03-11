@@ -204,7 +204,6 @@ class Conversation():
         self.rac_time_measure()
         # 音声認識による文字起こし
         introduce_reaction_response = self.rec.run()
-        # introduce_reaction_response = input("You: ")
 
         # excelに反応時間を記録
         self.excel_operations.rac_time_excel(self.start_time,self.end_time,self.conv_start_time)
@@ -251,9 +250,6 @@ class Conversation():
             response = self.llm_chain.predict(
                     human_input="こんにちは。あなたの名前は何ですか？私の名前は{}です。".format(self.user_name),  introduce_prompt=self.introduce_prompt)
             
-            # self.syntheticVoice.speaking(response.replace(
-            #     'Mowasu: ', '').replace('もわす: ', ''))
-            # print(response.replace('AI: ', ''))
             self.syntheticVoice.speaking("こんにちは。私の名前はもわすです。よろしくお願いします。{}さん、眠くなっていませんか？".format(self.user_name))
 
             # トークンをexcelに記録
@@ -261,48 +257,53 @@ class Conversation():
         while True:
             try:
                 with get_openai_callback() as cb:
-
-                    # 反応時間計測
-
                     # 音声認識による文字起こし
-                    for _ in range(2):
+                    for _ in range(10):
                         self.rac_time_measure()
                         self.human_input = self.rec.run()
                         if isinstance(self.human_input,str):
                             break
-                    # self.human_input = input("You: ")
 
                     # 会話内容が帰ってこなかった場合に眠いかどうかを聞く分岐を作成
-                    if self.human_input is None and self.introduce_flg==False:
-                        self.drowsiness_flg=True
-                        self.introduce(self.human_input,self.drowsiness_flg)
-                        self.drowsiness_flg=False
+                    # if self.human_input is None and self.introduce_flg==False:
+                    #     self.drowsiness_flg=True
+                    #     self.introduce(self.human_input,self.drowsiness_flg)
+                    #     self.drowsiness_flg=False
 
                     # excelに反応時間を記録
                     self.excel_operations.rac_time_excel(self.start_time,self.end_time,self.conv_start_time)
 
                     # 反応時間をもとに眠気についての質問を行うか判定
-                    self.drowsiness_flg=self.question_judge.run(self.conv_cnt)
+                    # self.drowsiness_flg=self.question_judge.run(self.conv_cnt)
 
                     self.token_record.token_record(cb, self.conv_cnt)
                     self.conv_cnt += 1
 
                     # 未案内時の場合
-                    if self.introduce_flg==False:
-                        # 案内に関する処理
-                        self.introduce(self.human_input,self.drowsiness_flg)
-                        self.drowsiness_flg=False
+                    # if self.introduce_flg==False:
+                    #     # 案内に関する処理
+                    #     self.introduce(self.human_input,self.drowsiness_flg)
+                    #     self.drowsiness_flg=False
 
                     response = self.llm_chain.predict(
                         human_input=self.human_input, summary=summary, introduce_prompt=self.introduce_prompt)
 
                     logger.info(response.replace('AI: ', ''))
                     self.syntheticVoice.speaking(response.replace(
-                        'AI: ', '').replace('もわす: ', '').replace('Mowasu: ', ''))
+                        'AI: ', '').replace('もわす: ', '').replace('Mowasu: ', '').replace('Assistant: ', ''))
+                    
+                    # 経過時間を計測
+                    now=datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S.%f')
+                    now=datetime.datetime.strptime(now, '%Y/%m/%d %H:%M:%S.%f')
+                    elapsed_time=now-self.conv_start_time
+                    print("経過時間:{}".format(elapsed_time))
+
+                    # 360秒経過したら会話を終了する
+                    if elapsed_time.seconds>=360:
+                        self.syntheticVoice.speaking("会話を終了します。")
+                        raise KeyboardInterrupt
+
             except KeyboardInterrupt:
-                # 会話の要約をDBに格納
-                # summary = Gpt().make_conversation_summary()
-                # Sql().store_conversation_summary(summary)
                 Sql().store_conversation()
 
                 beep.high()
