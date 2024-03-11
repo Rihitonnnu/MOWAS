@@ -12,7 +12,7 @@ class QuestionJudge:
         self.df = pd.read_excel(self.reaction_time_sheet_path, sheet_name='Sheet')
         # excelファイルの最終行のreaction_timeを取得
         reaction_time = self.df['reaction_time'].iloc[-1]
-        if reaction_time>1.5:
+        if reaction_time>=1.5:
             self.threshold_judge_cnt+=1
     
     # 眠くなっている可能性がある場合はTrueを返す
@@ -33,5 +33,3 @@ class QuestionJudge:
         
         return False
 
-# result=QuestionJudge('../data/reaction_time/20240119/kawanishi/165732.xlsx').run()
-# print(result)
